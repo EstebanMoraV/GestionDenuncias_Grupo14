@@ -18,9 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -30,16 +28,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource   // Para cargar imágenes locales
 import com.example.gestiondenuncias_grupo14.R  // Importa el recurso R para acceder a drawable
 import androidx.compose.runtime.*     // <-- Necesario para remember, mutableStateOf, by
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.navigation.NavController
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(){
+fun Login(navController: NavController? = null){
 
     // 🔹 Variables de estado para guardar lo que el usuario escribe
     var username by remember { mutableStateOf("") }
@@ -107,7 +105,7 @@ fun Login(){
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Ingresar") }
 
-            TextButton(onClick = { /*Acción futura*/ }) {
+            TextButton(onClick = { navController?.navigate("registro") }) {
                 Text("¿No tienes cuenta? Registrate aquí")
             }
 
