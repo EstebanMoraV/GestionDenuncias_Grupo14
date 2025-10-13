@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
@@ -24,16 +28,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Registro(navController: NavController? = null){
+fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()){
     // Variables
     var rut by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
+    var correo by remember { mutableStateOf("") }
     var fechaNacimiento by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var contrasena2 by remember { mutableStateOf("") }
@@ -47,6 +55,14 @@ fun Registro(navController: NavController? = null){
     // Lista de empresas
     val empresas = listOf("Productos Cave", "Diprovet", "Lubricantes Internacionales")
 
+    // Estado de scroll
+    val scrollState = rememberScrollState()
+
+    // SnackbarHostState y coroutine scope
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+
     Scaffold (
         topBar = {
             TopAppBar(
@@ -56,14 +72,16 @@ fun Registro(navController: NavController? = null){
                     titleContentColor = colorScheme.onPrimary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // necesario para mostrar el globo
     ) {
         innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)              // Respeta el padding interno del Scaffold
                 .fillMaxSize()                      // Ocupa todo el espacio disponible
-                .padding(24.dp),                    // Padding uniforme alrededor
+                .padding(24.dp)                   // Padding uniforme alrededor
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(24.dp), // Espaciado uniforme entre elementos
             horizontalAlignment = Alignment.CenterHorizontally // Centra los elementos horizontalmente
         ){
@@ -134,6 +152,50 @@ fun Registro(navController: NavController? = null){
                     value = apellido,
                     onValueChange = {apellido = it},
                     label = { Text("Ingrese aquí su apellido") },
+                    modifier = Modifier
+                        .weight(1f) // Ocupa el espacio restante
+                        .alignByBaseline()
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Text(
+                    text = "Correo",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.alignByBaseline()
+                        .width(60.dp)
+                )
+
+                OutlinedTextField(
+                    value = correo,
+                    onValueChange = {correo = it},
+                    label = { Text("pepito123@gmail.com") },
+                    modifier = Modifier
+                        .weight(1f) // Ocupa el espacio restante
+                        .alignByBaseline()
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                Text(
+                    text = "Contraseña",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.alignByBaseline()
+                        .width(60.dp)
+                )
+
+                OutlinedTextField(
+                    value = contrasena,
+                    onValueChange = {contrasena = it},
+                    label = { Text("Ingrese aquí su contraseña") },
                     modifier = Modifier
                         .weight(1f) // Ocupa el espacio restante
                         .alignByBaseline()
@@ -236,7 +298,29 @@ fun Registro(navController: NavController? = null){
             }
 
             Button(
-                onClick = { /* Acción futura*/ },
+                onClick = {
+                    val exito = viewModel.registrarUsuario(
+                        rut,
+                        nombre,
+                        apellido,
+                        correo,
+                        contrasena,
+                        empresa,
+                        cargo,
+                        dep_area
+                    )
+
+                    scope.launch {
+                        if (exito) {
+                            snackbarHostState.showSnackbar("Usuario registrado con exito!")
+                            navController?.navigate("login")
+                        } else {
+                            snackbarHostState.showSnackbar("El usuario ya se ha registrado con anterioridad")
+                        }
+
+                    }
+
+                },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Registrar") }
 
