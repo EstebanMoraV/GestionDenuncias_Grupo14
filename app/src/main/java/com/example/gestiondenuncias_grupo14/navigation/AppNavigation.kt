@@ -8,6 +8,8 @@ import androidx.navigation.compose.composable
 import com.example.gestiondenuncias_grupo14.ui.screen.Login
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import com.example.gestiondenuncias_grupo14.ui.screen.MenuPrincipal
+
 
 @Composable
 fun AppNavigation(
@@ -27,5 +29,10 @@ fun AppNavigation(
         composable("registro") {
             Registro(navController = navController, viewModel = usuarioViewModel)
         }
+        // Pasar datos
+        composable("menu") {
+            MenuPrincipal(viewModel = usuarioViewModel)
+        }
+
     }
 }

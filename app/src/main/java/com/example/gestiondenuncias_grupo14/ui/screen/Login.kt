@@ -117,7 +117,8 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                     scope.launch {
                         if (exito) {
                             snackbarHostState.showSnackbar("Inicio de sesión exitoso!")
-                            // Acá pondremos un nav controller a futuro
+                            navController?.navigate("menu")
+
                         } else {
                             snackbarHostState.showSnackbar("Correo o Contraseña incorrectos")
                         }
