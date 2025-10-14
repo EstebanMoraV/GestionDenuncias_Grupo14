@@ -1,22 +1,38 @@
 package com.example.gestiondenuncias_grupo14.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.ui.screen.Login
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
+import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import com.example.gestiondenuncias_grupo14.ui.screen.MenuPrincipal
 
 
 @Composable
-fun AppNavigation(){
-    val navController = rememberNavController()
-
+fun AppNavigation(
+    navController: NavHostController,
+    usuarioViewModel: UsuarioViewModel = viewModel()
+) {
     NavHost(
         navController = navController,
         startDestination = "login"
     ) {
-        composable("login"){ Login(navController) }
-        composable("registro") { Registro(navController) }
+        // Pantalla Login
+        composable("login") {
+            Login(navController = navController, viewModel = usuarioViewModel)
+        }
+
+        // Pantalla Registro
+        composable("registro") {
+            Registro(navController = navController, viewModel = usuarioViewModel)
+        }
+        // Pasar datos
+        composable("menu") {
+            MenuPrincipal(viewModel = usuarioViewModel)
+        }
+
     }
 }

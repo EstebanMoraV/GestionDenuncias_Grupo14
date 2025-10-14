@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -32,16 +34,23 @@ import com.example.gestiondenuncias_grupo14.R  // Importa el recurso R para acce
 import androidx.compose.runtime.*     // <-- Necesario para remember, mutableStateOf, by
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(navController: NavController? = null){
+fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()){
 
     // 🔹 Variables de estado para guardar lo que el usuario escribe
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // SnackbarHostState y coroutine scope
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold (
         topBar = {
@@ -52,7 +61,9 @@ fun Login(navController: NavController? = null){
                     titleContentColor = colorScheme.onPrimary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 necesario para mostrar el globo
+
     ) {
         innerPadding ->
         // 🔸 Column: organiza los elementos de manera vertical
@@ -101,7 +112,18 @@ fun Login(navController: NavController? = null){
             )
 
             Button(
-                onClick = { /* Acción futura */ },
+                onClick = {
+                    val exito = viewModel.login(username, password)
+                    scope.launch {
+                        if (exito) {
+                            snackbarHostState.showSnackbar("Inicio de sesión exitoso!")
+                            navController?.navigate("menu")
+
+                        } else {
+                            snackbarHostState.showSnackbar("Correo o Contraseña incorrectos")
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Ingresar") }
 

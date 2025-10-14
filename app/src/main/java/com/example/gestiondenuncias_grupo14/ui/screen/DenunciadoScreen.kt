@@ -1,6 +1,5 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
-import android.text.style.IconMarginSpan
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -51,6 +51,7 @@ fun DenunciadoScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Acta de Denuncias") },
+
                 navigationIcon = {
                     IconButton(onClick = { navController?.navigateUp() }) {
                         Icon(imageVector = Icons.Default.Menu, contentDescription = "Abrir menú")
@@ -220,6 +221,20 @@ fun DenunciadoScreen(
                 }
 
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            // Botón: Aceptar
+            Button(
+                onClick = {
+                    if (viewModel.validarFormularioDenunciado()) {
+                        navController?.navigate(route = "resumen")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Aceptar")
+            }
+
         }
     }
 }
