@@ -39,4 +39,27 @@ class UsuarioViewModel: ViewModel() {
             true
         } else false
     }
+    fun validarCampos(
+        rut: String,
+        nombre: String,
+        apellido: String,
+        correo: String,
+        contrasena: String,
+        empresa: String,
+        cargo: String,
+        depArea: String
+    ): String? {
+        if (rut.isBlank()) return "El campo Rut es obligatorio"
+        if (!Regex("""^\d{7,8}-[0-9kK]$""").matches(rut)) return "El Rut no tiene el formato correcto"
+        if (nombre.isBlank()) return "El nombre es obligatorio"
+        if (apellido.isBlank()) return "El apellido es obligatorio"
+        if (correo.isBlank()) return "El correo es obligatorio"
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches()) return "El correo no es válido"
+        if (contrasena.length < 6) return "La contraseña debe tener al menos 6 caracteres"
+        if (empresa.isBlank()) return "Debe seleccionar una empresa"
+        if (cargo.isBlank()) return "El cargo es obligatorio"
+        if (depArea.isBlank()) return "El área o departamento es obligatorio"
+        return null // Todo está bien
+    }
+
 }
