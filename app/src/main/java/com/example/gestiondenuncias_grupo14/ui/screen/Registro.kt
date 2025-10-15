@@ -299,6 +299,26 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
 
             Button(
                 onClick = {
+
+                    val error = viewModel.validarCampos(
+                        rut,
+                        nombre,
+                        apellido,
+                        correo,
+                        contrasena,
+                        empresa,
+                        cargo,
+                        dep_area
+                    )
+
+                    if (error != null) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(error)
+                        }
+                        return@Button // Detiene la ejecución del registro
+                    }
+
+
                     val exito = viewModel.registrarUsuario(
                         rut,
                         nombre,
