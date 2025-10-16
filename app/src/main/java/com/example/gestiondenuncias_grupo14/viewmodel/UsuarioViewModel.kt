@@ -10,6 +10,28 @@ class UsuarioViewModel: ViewModel() {
     var usuarioActual: Usuario? = null
         private set
 
+
+    // Lista de cargos para el campo "cargo"
+    val cargos = listOf(
+        "Operario", "Técnico", "Analista", "Ingeniero", "Arquitecto", "Diseñador", "Programador",
+        "Desarrollador", "Tester", "Supervisor", "Coordinador", "Gerente de Proyectos",
+        "Jefe de Área", "Gerente", "Director", "Secretario", "Contador", "Auditor", "vendedor",
+        "minero", "bombero", "carabinero", "Otros"
+    )
+
+    // Lista de departamentos, compañías y áreas para el campo "dpto_gcia_area"
+    val dptos = listOf(
+        "RRHH",
+        "Producción",
+        "Logística",
+        "Marketing",
+        "Finanzas",
+        "Comercial",
+        "Finanzas",
+        "Legal",
+        "Otros"
+    )
+
     fun registrarUsuario(
         rut: String,
         nombre: String,
