@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.gestiondenuncias_grupo14.ui.screen.DenunciadoScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.Login
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
@@ -31,7 +32,11 @@ fun AppNavigation(
         }
         // Pasar datos
         composable("menu") {
-            MenuPrincipal(viewModel = usuarioViewModel)
+            MenuPrincipal(navController = navController , viewModel = usuarioViewModel)
+        }
+
+        composable ("denunciado") {
+            DenunciadoScreen()
         }
 
     }

@@ -17,15 +17,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.gestiondenuncias_grupo14.R
-import com.example.gestiondenuncias_grupo14.model.Usuario
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import androidx.navigation.NavController
 
 // Modelo para representar cada botón con imagen y texto
 data class BotonDenuncia(val imagen: Int, val descripcion: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuPrincipal(viewModel: UsuarioViewModel) {
+fun MenuPrincipal(navController: NavController? = null ,viewModel: UsuarioViewModel) {
     val usuario = viewModel.usuarioActual
     val nombre = usuario?.nombre ?: "Invitado"
     val empresa = usuario?.empresa ?: "Sin empresa"
@@ -84,7 +84,7 @@ fun MenuPrincipal(viewModel: UsuarioViewModel) {
                             .size(140.dp)
                     ) {
                         Button(
-                            onClick = { /* Acción futura */ },
+                            onClick = { navController?.navigate("denunciado") },
                             modifier = Modifier.fillMaxSize(),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
