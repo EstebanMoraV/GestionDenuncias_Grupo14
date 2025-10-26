@@ -37,7 +37,11 @@ fun AppNavigation(
         }
         // Pasar datos
         composable("menu") {
-            MenuPrincipal(viewModel = usuarioViewModel)
+            MenuPrincipal(navController = navController , viewModel = usuarioViewModel)
+        }
+
+        composable ("denunciado") {
+            DenunciadoScreen()
         }
 
         composable(route = "denunciado"){

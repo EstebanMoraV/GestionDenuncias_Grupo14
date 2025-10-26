@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -32,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.gestiondenuncias_grupo14.R  // Importa el recurso R para acceder a drawable
 import androidx.compose.runtime.*     // <-- Necesario para remember, mutableStateOf, by
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -127,16 +129,13 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Ingresar") }
 
-            TextButton(onClick = { navController?.navigate("registro") }) {
+            TextButton(onClick = { navController?.navigate("registro") },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Blue
+                    )
+                ) {
                 Text("¿No tienes cuenta? Registrate aquí")
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Todos los derechos reservados"
-            )
-
 
         }
     }
