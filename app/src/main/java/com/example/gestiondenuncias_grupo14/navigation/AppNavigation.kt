@@ -24,7 +24,7 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "denunciado"
+        startDestination = "login"
     ) {
         // Pantalla Login
         composable("login") {
@@ -51,6 +51,10 @@ fun AppNavigation(
         composable(route = "representante"){
             RepresentanteScreen(navController = navController, viewModel = DenunciadoViewModel())
         }
+
+        
+
+
 
     }
 }
