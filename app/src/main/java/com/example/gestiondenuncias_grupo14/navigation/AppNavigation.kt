@@ -13,6 +13,7 @@ import com.example.gestiondenuncias_grupo14.ui.screen.Login
 import com.example.gestiondenuncias_grupo14.ui.screen.MenuPrincipal
 import com.example.gestiondenuncias_grupo14.ui.screen.QuienSomosScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
+import com.example.gestiondenuncias_grupo14.ui.screen.RelatoScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.RepresentanteScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.ResumenDenunciado
 import com.example.gestiondenuncias_grupo14.ui.screen.TestigoScreen
@@ -28,7 +29,7 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "representante"
+        startDestination = "login"
     ) {
         composable("login") {
             Login(navController = navController, viewModel = usuarioViewModel)
@@ -66,9 +67,9 @@ fun AppNavigation(
             TestigoScreen(navController = navController)
         }
 
-        /*composable("relato") {
+        composable("relato") {
             RelatoScreen(navController = navController)
-        }*/
+        }
 
     }
 }
