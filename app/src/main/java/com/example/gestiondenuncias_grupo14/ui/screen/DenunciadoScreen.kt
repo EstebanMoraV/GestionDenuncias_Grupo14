@@ -38,6 +38,8 @@ import androidx.navigation.NavController
 import com.example.gestiondenuncias_grupo14.viewmodel.DenunciadoViewModel
 import androidx.compose.material3.DropdownMenuItem as M3DropdownMenuItem
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DenunciadoScreen(

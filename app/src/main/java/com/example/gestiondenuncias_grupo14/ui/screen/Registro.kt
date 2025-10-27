@@ -1,15 +1,19 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -22,337 +26,242 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()){
-    // Variables
+fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()) {
+    // Variables de entrada
     var rut by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
-    var fechaNacimiento by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
-    var contrasena2 by remember { mutableStateOf("") }
+    var confirmarContrasena by remember { mutableStateOf("") }
     var empresa by remember { mutableStateOf("") }
     var cargo by remember { mutableStateOf("") }
     var dep_area by remember { mutableStateOf("") }
 
-    // Estado para el ComboBox
-    var expanded by remember { mutableStateOf(false) }
+    // Estado para los ComboBox
+    var expandedEmpresa by remember { mutableStateOf(false) }
+    var expandedCargo by remember { mutableStateOf(false) }
+    var expandedDepto by remember { mutableStateOf(false) }
 
-    // Lista de empresas
+    // Listas
     val empresas = listOf("Productos Cave", "Diprovet", "Lubricantes Internacionales")
+    val cargos = viewModel.cargos
+    val dptos = viewModel.dptos
 
-    // Estado de scroll
+    // Scroll y snackbar
     val scrollState = rememberScrollState()
-
-    // SnackbarHostState y coroutine scope
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // Estado de carga
+    var isLoading by remember { mutableStateOf(false) }
 
-    Scaffold (
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Formulario de Registro") },
-                colors = topAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colorScheme.primary,
                     titleContentColor = colorScheme.onPrimary
                 )
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // necesario para mostrar el globo
-    ) {
-        innerPadding ->
-        Column(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .padding(innerPadding)              // Respeta el padding interno del Scaffold
-                .fillMaxSize()                      // Ocupa todo el espacio disponible
-                .padding(24.dp)                   // Padding uniforme alrededor
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(24.dp), // Espaciado uniforme entre elementos
-            horizontalAlignment = Alignment.CenterHorizontally // Centra los elementos horizontalmente
-        ){
-            Text(
-                text = "Registro de Usuario",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            // Acá hice una fila dentro de la columna
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = "Rut",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
+                    text = "Registro de Usuario",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.primary
                 )
 
-                OutlinedTextField(
-                    value = rut,
-                    onValueChange = {rut = it},
-                    label = { Text("12345678-9") },
-                    modifier = Modifier
-                        .alignByBaseline() // Ocupa el espacio restante
-                        .weight(1f)
-                )
-            }
+                // Campos de texto normales
+                RegistroTextField("Rut", "12345678-9", rut) { rut = it }
+                RegistroTextField("Nombre", "Ingrese su nombre", nombre) { nombre = it }
+                RegistroTextField("Apellido", "Ingrese su apellido", apellido) { apellido = it }
+                RegistroTextField("Correo", "pepito123@gmail.com", correo) { correo = it }
+                RegistroTextField("Contraseña", "Ingrese su contraseña", contrasena) { contrasena = it }
+                RegistroTextField("Confirmar", "Repita su contraseña", confirmarContrasena) { confirmarContrasena = it }
 
+                // Combo Empresa
+                ComboBoxField("Empresa", empresa, expandedEmpresa, empresas, onClick = {
+                    empresa = it; expandedEmpresa = false
+                }) { expandedEmpresa = !expandedEmpresa }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Nombre",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
+                // Combo Cargo
+                ComboBoxField("Cargo", cargo, expandedCargo, cargos, onClick = {
+                    cargo = it; expandedCargo = false
+                }) { expandedCargo = !expandedCargo }
 
-                OutlinedTextField(
-                    value = nombre,
-                    onValueChange = {nombre = it},
-                    label = { Text("Ingrese aquí su nombre") },
-                    modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
+                // Combo Departamento
+                ComboBoxField("Depto - Área", dep_area, expandedDepto, dptos, onClick = {
+                    dep_area = it; expandedDepto = false
+                }) { expandedDepto = !expandedDepto }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Apellido",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                OutlinedTextField(
-                    value = apellido,
-                    onValueChange = {apellido = it},
-                    label = { Text("Ingrese aquí su apellido") },
-                    modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Correo",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                OutlinedTextField(
-                    value = correo,
-                    onValueChange = {correo = it},
-                    label = { Text("pepito123@gmail.com") },
-                    modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Contraseña",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                OutlinedTextField(
-                    value = contrasena,
-                    onValueChange = {contrasena = it},
-                    label = { Text("Ingrese aquí su contraseña") },
-                    modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
-
-            // ComboBox Empresa
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Empresa",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                // Aquí viene la creación del combobox
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = empresa,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Seleccione una empresa") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .weight(1f)
-                            .alignByBaseline()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        empresas.forEach { opcion ->
-                            DropdownMenuItem(
-                                text = { Text(opcion) },
-                                onClick = {
-                                    empresa = opcion
-                                    expanded = false
-                                }
-                            )
+                Button(
+                    onClick = {
+                        val error = viewModel.validarCampos(
+                            rut, nombre, apellido, correo, contrasena, empresa, cargo, dep_area
+                        )
+                        if (error != null) {
+                            scope.launch { snackbarHostState.showSnackbar(error) }
+                            return@Button
                         }
-                    }
+
+                        if (contrasena != confirmarContrasena) {
+                            scope.launch { snackbarHostState.showSnackbar("Las contraseñas no coinciden") }
+                            return@Button
+                        }
+
+                        // Simular carga
+                        scope.launch {
+                            isLoading = true
+                            delay(1500) // simula espera (ej. validación o backend)
+                            val exito = viewModel.registrarUsuario(
+                                rut, nombre, apellido, correo, contrasena, empresa, cargo, dep_area
+                            )
+                            isLoading = false
+
+                            if (exito) {
+                                snackbarHostState.showSnackbar("Usuario registrado con éxito")
+                                navController?.navigate("login")
+                            } else {
+                                snackbarHostState.showSnackbar("El usuario ya está registrado")
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Registrar")
                 }
             }
 
-// ------------------------------------------------------------------------------
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Cargo",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                OutlinedTextField(
-                    value = cargo,
-                    onValueChange = {cargo = it},
-                    label = { Text("Ingrese aquí su cargo") },
+            // 🔄 Indicador de carga animado
+            if (isLoading) {
+                Box(
                     modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                Text(
-                    text = "Depto - Area",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.alignByBaseline()
-                        .width(60.dp)
-                )
-
-                OutlinedTextField(
-                    value = dep_area,
-                    onValueChange = {dep_area = it},
-                    label = { Text("Ingrese aquí su area o departamento") },
-                    modifier = Modifier
-                        .weight(1f) // Ocupa el espacio restante
-                        .alignByBaseline()
-                )
-            }
-
-            Button(
-                onClick = {
-
-                    val error = viewModel.validarCampos(
-                        rut,
-                        nombre,
-                        apellido,
-                        correo,
-                        contrasena,
-                        empresa,
-                        cargo,
-                        dep_area
-                    )
-
-                    if (error != null) {
-                        scope.launch {
-                            snackbarHostState.showSnackbar(error)
-                        }
-                        return@Button // Detiene la ejecución del registro
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(12.dp))
+                        Text("Cargando...", color = colorScheme.primary)
                     }
-
-
-                    val exito = viewModel.registrarUsuario(
-                        rut,
-                        nombre,
-                        apellido,
-                        correo,
-                        contrasena,
-                        empresa,
-                        cargo,
-                        dep_area
-                    )
-
-                    scope.launch {
-                        if (exito) {
-                            snackbarHostState.showSnackbar("Usuario registrado con exito!")
-                            navController?.navigate("login")
-                        } else {
-                            snackbarHostState.showSnackbar("El usuario ya se ha registrado con anterioridad")
-                        }
-
-                    }
-
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Registrar") }
-
+                }
+            }
         }
     }
 }
 
-// Previsualización
+@Composable
+fun RegistroTextField(label: String, placeholder: String, value: String, onValueChange: (String) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = colorScheme.primary,
+            modifier = Modifier.alignByBaseline().width(90.dp)
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(placeholder) },
+            modifier = Modifier.weight(1f).alignByBaseline()
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ComboBoxField(
+    label: String,
+    value: String,
+    expanded: Boolean,
+    options: List<String>,
+    onClick: (String) -> Unit,
+    onExpandedChange: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = colorScheme.primary,
+            modifier = Modifier.alignByBaseline().width(90.dp)
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { onExpandedChange() }
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Seleccione") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor().weight(1f).alignByBaseline()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { onExpandedChange() }
+            ) {
+                options.forEach { opcion ->
+                    DropdownMenuItem(
+                        text = { Text(opcion) },
+                        onClick = { onClick(opcion) }
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun RegistroPreview(){
-    MaterialTheme{
+fun RegistroPreview() {
+    MaterialTheme {
         Registro()
     }
 }
