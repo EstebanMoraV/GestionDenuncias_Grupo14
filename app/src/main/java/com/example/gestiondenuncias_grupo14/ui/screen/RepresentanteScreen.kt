@@ -25,7 +25,7 @@ fun RepresentanteScreen(
         dismissText = "No",
         onConfirm = {
             mostrarDialogo = false
-            navController.navigate("victimaDirecta") // Nueva ruta
+            navController.navigate("tipodenuncia") // Nueva ruta
         },
         onDismiss = {
             mostrarDialogo = false

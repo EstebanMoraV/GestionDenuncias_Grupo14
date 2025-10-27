@@ -15,6 +15,7 @@ import com.example.gestiondenuncias_grupo14.ui.screen.QuienSomosScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
 import com.example.gestiondenuncias_grupo14.ui.screen.RepresentanteScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.ResumenDenunciado
+import com.example.gestiondenuncias_grupo14.ui.screen.TestigoScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.TipoDenunciaScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.VictimaScreen
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
@@ -61,11 +62,11 @@ fun AppNavigation(
             EvidenciaScreen(navController = navController)
         }
 
-        /*composable("testigo") {
+        composable("testigo") {
             TestigoScreen(navController = navController)
         }
 
-        composable("relato") {
+        /*composable("relato") {
             RelatoScreen(navController = navController)
         }*/
 

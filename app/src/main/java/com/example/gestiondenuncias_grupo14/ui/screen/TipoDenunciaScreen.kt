@@ -118,7 +118,7 @@ fun TipoDenunciaScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = { navController.navigate("resumen") },
+                onClick = { navController.navigate("evidencia") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
