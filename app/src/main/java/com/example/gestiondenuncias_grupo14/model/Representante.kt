@@ -1,7 +1,7 @@
 package com.example.gestiondenuncias_grupo14.model
 
 data class Representante(
-    val nombreRep: String = "",
+    val nombre: String = "",
     val apellido_paterno: String = "",
     val apellido_materno: String = "",
     val rut: String = "",

@@ -9,26 +9,24 @@ import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.viewmodel.FormularioPersonaViewModel
 
 @Composable
-fun DenunciadoScreen(
+fun VictimaScreen(
     navController: NavController,
     viewModel: FormularioPersonaViewModel = viewModel()
 ) {
     FormularioPersonaScreen(
-        titulo = "Formulario Denunciado",
+        titulo = "Formulario Víctima",
         navController = navController,
         viewModel = viewModel,
-        siguienteRuta = "representante"
+        siguienteRuta = "tipodenuncia"
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun DenunciadoScreenPreview() {
+fun VictimaScreenPreview() {
     val mockNavController = rememberNavController()
     MaterialTheme {
-        DenunciadoScreen(navController = mockNavController)
+        VictimaScreen(navController = mockNavController)
     }
 }
-
-
 
