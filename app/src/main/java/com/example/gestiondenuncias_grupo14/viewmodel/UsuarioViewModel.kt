@@ -2,6 +2,11 @@ package com.example.gestiondenuncias_grupo14.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.example.gestiondenuncias_grupo14.model.Usuario
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import android.net.Uri
+
 
 class UsuarioViewModel: ViewModel() {
 
@@ -31,6 +36,10 @@ class UsuarioViewModel: ViewModel() {
         "Legal",
         "Otros"
     )
+
+    // En tu ViewModel
+    var fotoUri: Uri? by mutableStateOf(null)
+
 
     fun registrarUsuario(
         rut: String,

@@ -10,6 +10,7 @@ import com.example.gestiondenuncias_grupo14.ui.screen.Login
 import com.example.gestiondenuncias_grupo14.ui.screen.Registro
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
 import com.example.gestiondenuncias_grupo14.ui.screen.MenuPrincipal
+import com.example.gestiondenuncias_grupo14.ui.screen.QuienSomosScreen
 
 
 @Composable
@@ -37,6 +38,10 @@ fun AppNavigation(
 
         composable ("denunciado") {
             DenunciadoScreen(navController = navController)
+        }
+
+        composable("quiensomos") {
+            QuienSomosScreen(navController = navController)
         }
 
     }
