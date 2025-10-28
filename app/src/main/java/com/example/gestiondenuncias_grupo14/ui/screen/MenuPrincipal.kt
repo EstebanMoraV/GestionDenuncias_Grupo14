@@ -123,12 +123,12 @@ fun PreviewMenuPrincipal() {
             nombre = "Juan",
             apellido = "Pérez",
             correo = "juan@example.com",
-            contrasena = "1234",
+            contrasena = "123456",
             empresa = "Empresa A",
             cargo = "Analista",
             depto = "Recursos Humanos"
         )
-        login("juan@example.com", "1234")
+        login("juan@example.com", "123456")
     }
 
     MaterialTheme {
