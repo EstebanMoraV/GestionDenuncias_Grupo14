@@ -3,9 +3,11 @@ package com.example.gestiondenuncias_grupo14.ui.screen
 import android.Manifest
 import android.media.MediaPlayer
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
@@ -34,6 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RelatoScreen(navController: NavController) {
@@ -331,10 +334,14 @@ fun RelatoScreen(navController: NavController) {
             // btn finalizar
             Button(
                 onClick = {
-                    mediaRecorder?.release()
-                    mediaPlayer?.release()
-                    grabando = false
-                    reproduciendo = false
+                    mediaRecorder = MediaRecorder(context).apply {
+                        setAudioSource(MediaRecorder.AudioSource.MIC)
+                        setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP) // cambia a 3GP por compatibilidad
+                        setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                        setOutputFile(archivoAudio!!.absolutePath)
+                        prepare()
+                        start()
+                    }
                     navController.navigate("resumen") {
                         popUpTo("relato") { inclusive = true }
                     }
@@ -379,6 +386,7 @@ fun RelatoScreen(navController: NavController) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun RelatoScreenPreview() {
