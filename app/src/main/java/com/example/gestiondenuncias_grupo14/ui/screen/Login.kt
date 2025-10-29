@@ -33,6 +33,7 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+
     // Registro automático del usuario por defecto (solo si no existe sesión)
     LaunchedEffect(Unit) {
         if (viewModel.usuarioActual == null) {
@@ -78,7 +79,7 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 painter = painterResource(id = R.drawable.logo_empresa),
                 contentDescription = "Logo de la empresa",
                 modifier = Modifier
-                    .size(280.dp)
+                    .size(220.dp)
                     .padding(top = 16.dp)
             )
 
