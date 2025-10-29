@@ -17,11 +17,11 @@ import com.example.gestiondenuncias_grupo14.ui.screen.MenuPrincipal
 import com.example.gestiondenuncias_grupo14.ui.screen.QuienSomosScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.RelatoScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.RepresentanteScreen
-import com.example.gestiondenuncias_grupo14.ui.screen.ResumenDenunciado
+import com.example.gestiondenuncias_grupo14.ui.screen.ResumenScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.TestigoScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.TipoDenunciaScreen
 import com.example.gestiondenuncias_grupo14.ui.screen.VictimaScreen
-import com.example.gestiondenuncias_grupo14.viewmodel.FormularioPersonaViewModel
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -29,11 +29,12 @@ import com.example.gestiondenuncias_grupo14.viewmodel.FormularioPersonaViewModel
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    usuarioViewModel: UsuarioViewModel = viewModel()
+    usuarioViewModel: UsuarioViewModel = viewModel(),
+    globalViewModel: FormularioGlobalViewModel = viewModel()
 ) {
     NavHost(
         navController = navController,
-        startDestination = "relato"
+        startDestination = "menu"
     ) {
         // Pantalla Login
         composable("login") {
@@ -49,48 +50,40 @@ fun AppNavigation(
             MenuPrincipal(navController = navController , viewModel = usuarioViewModel)
         }
 
-        composable ("denunciado") {
-            DenunciadoScreen(navController = navController)
+        composable("denunciado") {
+            DenunciadoScreen(navController = navController, globalViewModel = globalViewModel)
         }
 
-        // Quiénes Somos
+        composable("representante") {
+            RepresentanteScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("victima") {
+            VictimaScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("tipodenuncia") {
+            TipoDenunciaScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("evidencia") {
+            EvidenciaScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("testigo") {
+            TestigoScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("relato") {
+            RelatoScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
+        composable("resumen") {
+            ResumenScreen(navController = navController, globalViewModel = globalViewModel)
+        }
+
         composable("quiensomos") {
             QuienSomosScreen(navController = navController)
-        }
-
-        // Representante
-        composable("representante") {
-            RepresentanteScreen(navController = navController)
-        }
-
-        // Víctima
-        composable("victima") {
-            VictimaScreen(navController = navController)
-        }
-
-        // Tipo de Denuncia
-        composable("tipodenuncia") {
-            TipoDenunciaScreen(navController = navController)
-        }
-
-        // Evidencia
-        composable("evidencia") {
-            EvidenciaScreen(navController = navController)
-        }
-
-        // Relato
-        composable("relato") {
-            RelatoScreen(navController = navController)
-        }
-
-        // Resumen
-        composable("resumen") {
-            ResumenDenunciado(navController = navController)
-        }
-
-        // Testigo
-        composable("testigo") {
-            TestigoScreen(navController = navController)
         }
 
 
