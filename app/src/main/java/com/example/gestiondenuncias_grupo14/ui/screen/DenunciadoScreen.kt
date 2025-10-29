@@ -1,5 +1,6 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,6 +17,10 @@ fun DenunciadoScreen(
     globalViewModel: FormularioGlobalViewModel = viewModel(),
     viewModel: FormularioPersonaViewModel = viewModel()
 ) {
+    val scrollState = rememberScrollState()
+
+
+
     FormularioPersonaScreen(
         titulo = "Formulario Denunciado",
         navController = navController,

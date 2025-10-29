@@ -7,10 +7,8 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
 import com.example.gestiondenuncias_grupo14.viewmodel.FormularioPersonaViewModel
 import kotlinx.coroutines.launch
@@ -22,7 +20,7 @@ fun FormularioPersonaScreen(
     navController: NavController,
     viewModel: FormularioPersonaViewModel,
     siguienteRuta: String,
-    onNextClick: (() -> Unit)? = null // ← nuevo parámetro opcional
+    onNextClick: (() -> Unit)? = null // nuevo parámetro opcional
 ) {
     val estado by viewModel.estado.collectAsState()
 
@@ -39,7 +37,7 @@ fun FormularioPersonaScreen(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

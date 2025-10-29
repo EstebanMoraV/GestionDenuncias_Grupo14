@@ -12,6 +12,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mic
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,37 +50,37 @@ fun RelatoScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
-    var texto by remember { mutableStateOf("") }
+    // Estados persistentes
+    var texto by rememberSaveable { mutableStateOf("") }
     val maxCaracteres = 1500
     val maxTiempoGrabacion = 5 * 60 * 1000L // 5 minutos
 
-    var grabando by remember { mutableStateOf(false) }
-    var reproduciendo by remember { mutableStateOf(false) }
-    var mostrarDialogoBorrar by remember { mutableStateOf(false) }
+    var grabando by rememberSaveable { mutableStateOf(false) }
+    var reproduciendo by rememberSaveable { mutableStateOf(false) }
+    var mostrarDialogoBorrar by rememberSaveable { mutableStateOf(false) }
 
-    var mediaRecorder: MediaRecorder? by remember { mutableStateOf(null) }
-    var mediaPlayer: MediaPlayer? by remember { mutableStateOf(null) }
-    var archivoAudio: File? by remember { mutableStateOf(null) }
+    var mediaRecorder by remember { mutableStateOf<MediaRecorder?>(null) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var archivoAudio by remember { mutableStateOf<File?>(null) }
 
-    // Animación micrófono
+    // Animación microfono
     val colorAnimado by animateColorAsState(
         targetValue = if (grabando) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        animationSpec = tween(600)
+        animationSpec = tween(600), label = "colorMic"
     )
-
     val infiniteTransition = rememberInfiniteTransition(label = "mic_pulse")
     val pulso by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.2f,
+        initialValue = 1f, targetValue = 1.2f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
-        ), label = "pulse"
+        ), label = "pulso"
     )
 
     // Permisos
-    var tienePermiso by remember { mutableStateOf(false) }
+    var tienePermiso by rememberSaveable { mutableStateOf(false) }
     val solicitarPermiso = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { concedido -> tienePermiso = concedido }
@@ -86,9 +89,9 @@ fun RelatoScreen(
         solicitarPermiso.launch(Manifest.permission.RECORD_AUDIO)
     }
 
-    // Estado del progreso del audio
-    var duracionAudio by remember { mutableStateOf(0) }
-    var posicionActual by remember { mutableStateOf(0) }
+    // Progreso reproducción
+    var duracionAudio by rememberSaveable { mutableStateOf(0) }
+    var posicionActual by rememberSaveable { mutableStateOf(0) }
 
     LaunchedEffect(reproduciendo) {
         while (reproduciendo) {
@@ -102,13 +105,14 @@ fun RelatoScreen(
 
     Scaffold(
         topBar = { TopBarApp(title = "Relato de la situación", navController = navController) }
-    ) { paddingValues ->
+    ) { padding ->
 
         Column(
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(padding)
                 .padding(16.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
@@ -120,12 +124,14 @@ fun RelatoScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                // Campo texto
+                // Campo de texto
                 OutlinedTextField(
                     value = texto,
                     onValueChange = {
-                        if (it.length <= maxCaracteres) texto = it
-                        globalViewModel.guardarRelatoTexto(it) // guarda el texto
+                        if (it.length <= maxCaracteres) {
+                            texto = it
+                            globalViewModel.guardarRelatoTexto(it)
+                        }
                     },
                     label = { Text("Escribe tu relato aquí...") },
                     modifier = Modifier
@@ -161,10 +167,7 @@ fun RelatoScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Botón grabar
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Button(
                         onClick = {
                             if (!tienePermiso) {
@@ -188,7 +191,6 @@ fun RelatoScreen(
                                     }
 
                                     grabando = true
-
                                     coroutineScope.launch {
                                         delay(maxTiempoGrabacion)
                                         if (grabando) {
@@ -239,15 +241,12 @@ fun RelatoScreen(
                     )
                 }
 
-                // Reproducir y borrar
+                // Reproducción, progreso y borrar
                 archivoAudio?.let { archivo ->
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón reproducir
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    // Reproducir / pausar
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Button(
                             onClick = {
                                 try {
@@ -293,7 +292,7 @@ fun RelatoScreen(
                         }
                     }
 
-                    // Barra progreso
+                    // Barra de progreso
                     if (duracionAudio > 0) {
                         val progreso = (posicionActual.toFloat() / duracionAudio.toFloat()).coerceIn(0f, 1f)
                         LinearProgressIndicator(
@@ -315,11 +314,9 @@ fun RelatoScreen(
                         )
                     }
 
+                    //  Borrar grabación
                     Spacer(modifier = Modifier.height(20.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         OutlinedButton(
                             onClick = { mostrarDialogoBorrar = true },
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -338,15 +335,10 @@ fun RelatoScreen(
                 }
             }
 
-            // Botón Finalizar
+            // Finalizar formulario
             Button(
                 onClick = {
-                    // Guarda texto y ruta del audio en el ViewModel global
-                    globalViewModel.guardarRelatoTexto(texto)
-                    archivoAudio?.let {
-                        globalViewModel.guardarRelatoAudio(it.absolutePath)
-                    }
-
+                    globalViewModel.guardarRelatoAudio(archivoAudio?.absolutePath ?: "")
                     navController.navigate("resumen") {
                         popUpTo("relato") { inclusive = true }
                     }
@@ -365,6 +357,7 @@ fun RelatoScreen(
         }
     }
 
+    // Confirmación borrar grabación
     if (mostrarDialogoBorrar) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoBorrar = false },
