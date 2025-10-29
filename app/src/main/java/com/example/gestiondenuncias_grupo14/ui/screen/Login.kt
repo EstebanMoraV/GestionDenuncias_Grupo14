@@ -21,12 +21,29 @@ import kotlinx.coroutines.launch
 @Composable
 fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()) {
 
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // Prellenado de campos
+    var username by remember { mutableStateOf("es@gmail.com") }
+    var password by remember { mutableStateOf("123456") }
     var cargando by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    // Registro automático del usuario por defecto
+    LaunchedEffect(Unit) {
+        if (viewModel.usuarioActual == null) {
+            viewModel.registrarUsuario(
+                rut = "19829659-7",
+                nombre = "Esteban",
+                apellido = "Mora",
+                correo = "es@gmail.com",
+                contrasena = "123456",
+                empresa = "Empresa de Prueba",
+                cargo = "Tester",
+                depto = "QA"
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -48,7 +65,6 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo
             Image(
                 painter = painterResource(id = R.drawable.logo_empresa),
                 contentDescription = "Logo de la empresa",
@@ -63,11 +79,10 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // Campos de correo y contraseña
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Correo Electronico") },
+                label = { Text("Correo Electrónico") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -82,26 +97,19 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Botón de login con animación
             Button(
                 onClick = {
                     cargando = true
                     scope.launch {
                         val exito = viewModel.login(username, password)
                         if (exito) {
-                            snackbarHostState.showSnackbar(
-                                "Inicio de sesión exitoso!",
-                                duration = SnackbarDuration.Short
-                            )
+                            snackbarHostState.showSnackbar("Inicio de sesión exitoso!")
                             navController?.navigate("menu") {
                                 popUpTo("login") { inclusive = true }
                                 launchSingleTop = true
                             }
                         } else {
-                            snackbarHostState.showSnackbar(
-                                "Correo o Contraseña incorrectos",
-                                duration = SnackbarDuration.Short
-                            )
+                            snackbarHostState.showSnackbar("Correo o Contraseña incorrectos")
                         }
                         cargando = false
                     }
@@ -133,11 +141,12 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("¿No tienes cuenta? Registrate aquí")
+                Text("¿No tienes cuenta? Regístrate aquí")
             }
         }
     }
 }
+
 
 
 

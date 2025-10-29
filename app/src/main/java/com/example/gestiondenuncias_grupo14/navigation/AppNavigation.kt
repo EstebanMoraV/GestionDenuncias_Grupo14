@@ -34,7 +34,7 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "menu"
+        startDestination = "login"
     ) {
         // Pantalla Login
         composable("login") {

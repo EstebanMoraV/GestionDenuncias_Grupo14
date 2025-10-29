@@ -1,34 +1,50 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.gestiondenuncias_grupo14.R
-import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import java.io.File
+import java.io.FileOutputStream
 
-// Modelo para representar cada botón con imagen y texto
-data class BotonDenuncia(val imagen: Int, val descripcion: String)
+// Función para guardar el bitmap en caché y obtener su URI
+fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
+    val file = File(context.cacheDir, "foto_temp.jpg")
+    FileOutputStream(file).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+    }
+    return Uri.fromFile(file)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuPrincipal(navController: NavController? = null ,viewModel: UsuarioViewModel) {
+fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewModel) {
     val usuario = viewModel.usuarioActual
     val nombre = usuario?.nombre ?: "Invitado"
     val empresa = usuario?.empresa ?: "Sin empresa"
+    val cargo = usuario?.cargo ?: ""
+    val depto = usuario?.depto ?: ""
+    val correo = usuario?.correo ?: ""
 
     val fondoColor = when (empresa) {
         "Empresa A" -> MaterialTheme.colorScheme.primaryContainer
@@ -37,12 +53,18 @@ fun MenuPrincipal(navController: NavController? = null ,viewModel: UsuarioViewMo
         else -> MaterialTheme.colorScheme.background
     }
 
-    val botones = listOf(
-        BotonDenuncia(R.drawable.acoso_laboral, "Acoso Laboral"),
-        BotonDenuncia(R.drawable.acososexual, "Acoso Sexual"),
-        BotonDenuncia(R.drawable.violenciatrabajo, "Violencia en el Trabajo"),
-        BotonDenuncia(R.drawable.otro, "Otro")
-    )
+    //var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val fotoUri = viewModel.fotoUri
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            viewModel.fotoUri = saveBitmapToCache(context, bitmap)
+        }
+    }
+
+
+
 
     Scaffold(
         topBar = {
@@ -64,50 +86,60 @@ fun MenuPrincipal(navController: NavController? = null ,viewModel: UsuarioViewMo
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Hola, $nombre",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(botones) { boton ->
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(140.dp)
-                    ) {
-                        Button(
-                            onClick = { navController?.navigate("denunciado") },
-                            modifier = Modifier.fillMaxSize(),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = boton.imagen),
-                                    contentDescription = boton.descripcion,
-                                    modifier = Modifier.size(64.dp),
-                                    contentScale = ContentScale.Fit
-                                )
-                                Text(
-                                    text = boton.descripcion,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                    }
+                if (fotoUri != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(fotoUri),
+                        contentDescription = "Foto del usuario",
+                        modifier = Modifier.size(64.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = "Hola, $nombre",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(text = "Cargo: $cargo", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Depto: $depto", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Correo: $correo", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Empresa: $empresa", style = MaterialTheme.typography.bodyMedium)
+                }
+
+                IconButton(onClick = { launcher.launch() }) {
+                    Icon(
+                        imageVector = Icons.Filled.CameraAlt,
+                        contentDescription = "Tomar foto",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = {
+                    navController?.navigate("denunciado")
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Text(
+                    text = "Comenzar Denuncia",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
         }
     }
 }
@@ -116,7 +148,6 @@ fun MenuPrincipal(navController: NavController? = null ,viewModel: UsuarioViewMo
 @Preview(showBackground = true)
 @Composable
 fun PreviewMenuPrincipal() {
-    // Simulamos un ViewModel con un usuario de ejemplo
     val viewModel = UsuarioViewModel().apply {
         registrarUsuario(
             rut = "12345678-9",
