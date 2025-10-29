@@ -17,7 +17,7 @@ fun TestigoScreen(
     viewModel: FormularioPersonaViewModel = viewModel()
 ) {
     FormularioPersonaScreen(
-        titulo = "Formulario Testigo",
+        titulo = "Datos del Testigo",
         navController = navController,
         viewModel = viewModel,
         siguienteRuta = "relato",

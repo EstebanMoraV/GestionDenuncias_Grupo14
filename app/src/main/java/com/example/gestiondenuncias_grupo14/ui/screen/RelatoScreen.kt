@@ -52,6 +52,9 @@ fun RelatoScreen(
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
+    // Estado para el snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+
     // Estados persistentes
     var texto by rememberSaveable { mutableStateOf("") }
     val maxCaracteres = 1500
@@ -339,6 +342,12 @@ fun RelatoScreen(
             Button(
                 onClick = {
                     globalViewModel.guardarRelatoAudio(archivoAudio?.absolutePath ?: "")
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Formulario completado correctamente",
+                            duration = SnackbarDuration.Short
+                        )
+                    }
                     navController.navigate("resumen") {
                         popUpTo("relato") { inclusive = true }
                     }
@@ -392,4 +401,3 @@ fun RelatoScreenPreview() {
         RelatoScreen(navController = mockNavController)
     }
 }
-

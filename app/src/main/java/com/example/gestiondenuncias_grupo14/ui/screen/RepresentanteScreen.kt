@@ -40,7 +40,7 @@ fun RepresentanteScreen(
 
     // Reutiliza el formulario base
     FormularioPersonaScreen(
-        titulo = "Formulario Representante",
+        titulo = "Datos del Representante de la empresa",
         navController = navController,
         viewModel = viewModel,
         // ruta por defecto

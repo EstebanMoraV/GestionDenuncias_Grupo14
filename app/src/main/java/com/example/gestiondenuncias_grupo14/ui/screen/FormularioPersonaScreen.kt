@@ -1,6 +1,7 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -20,7 +21,7 @@ fun FormularioPersonaScreen(
     navController: NavController,
     viewModel: FormularioPersonaViewModel,
     siguienteRuta: String,
-    onNextClick: (() -> Unit)? = null // nuevo parámetro opcional
+    onNextClick: (() -> Unit)? = null
 ) {
     val estado by viewModel.estado.collectAsState()
 
@@ -35,165 +36,174 @@ fun FormularioPersonaScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
 
-        Column(
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .imePadding(), // evita que el teclado cubra los campos
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            OutlinedTextField(
-                value = estado.nombre,
-                onValueChange = { viewModel.onNombreChange(it) },
-                label = { Text("Nombre") },
-                isError = estado.errores.nombre != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            estado.errores.nombre?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            OutlinedTextField(
-                value = estado.apellido_paterno,
-                onValueChange = { viewModel.onApellidoPaternoChange(it) },
-                label = { Text("Apellido Paterno") },
-                isError = estado.errores.apellido_paterno != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            estado.errores.apellido_paterno?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            OutlinedTextField(
-                value = estado.apellido_materno,
-                onValueChange = { viewModel.onApellidoMaternoChange(it) },
-                label = { Text("Apellido Materno") },
-                isError = estado.errores.apellido_materno != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            estado.errores.apellido_materno?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            OutlinedTextField(
-                value = estado.rut,
-                onValueChange = { viewModel.onRutChange(it) },
-                label = { Text("RUT") },
-                isError = estado.errores.rut != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            estado.errores.rut?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            // Cargo
-            ExposedDropdownMenuBox(
-                expanded = expandedCargo,
-                onExpandedChange = { expandedCargo = !expandedCargo }
-            ) {
+            // Nombre
+            item {
                 OutlinedTextField(
-                    value = estado.cargo,
-                    onValueChange = {},
-                    label = { Text("Cargo") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCargo) },
-                    readOnly = true,
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-                    isError = estado.errores.cargo != null
+                    value = estado.nombre,
+                    onValueChange = { viewModel.onNombreChange(it) },
+                    label = { Text("Nombre") },
+                    isError = estado.errores.nombre != null,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                ExposedDropdownMenu(
+                estado.errores.nombre?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // Apellido paterno
+            item {
+                OutlinedTextField(
+                    value = estado.apellido_paterno,
+                    onValueChange = { viewModel.onApellidoPaternoChange(it) },
+                    label = { Text("Apellido Paterno") },
+                    isError = estado.errores.apellido_paterno != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                estado.errores.apellido_paterno?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // Apellido materno
+            item {
+                OutlinedTextField(
+                    value = estado.apellido_materno,
+                    onValueChange = { viewModel.onApellidoMaternoChange(it) },
+                    label = { Text("Apellido Materno") },
+                    isError = estado.errores.apellido_materno != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                estado.errores.apellido_materno?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // RUT
+            item {
+                OutlinedTextField(
+                    value = estado.rut,
+                    onValueChange = { viewModel.onRutChange(it) },
+                    label = { Text("RUT") },
+                    isError = estado.errores.rut != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                estado.errores.rut?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            }
+
+            // Cargo (ExposedDropdown)
+            item {
+                ExposedDropdownMenuBox(
                     expanded = expandedCargo,
-                    onDismissRequest = { expandedCargo = false }
+                    onExpandedChange = { expandedCargo = !expandedCargo }
                 ) {
-                    viewModel.cargos.forEach { cargo ->
-                        DropdownMenuItem(
-                            text = { Text(cargo) },
-                            onClick = {
-                                viewModel.onCargoChange(cargo)
-                                expandedCargo = false
-                            }
-                        )
+                    OutlinedTextField(
+                        value = estado.cargo,
+                        onValueChange = {},
+                        label = { Text("Cargo") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCargo) },
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        isError = estado.errores.cargo != null
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedCargo,
+                        onDismissRequest = { expandedCargo = false }
+                    ) {
+                        viewModel.cargos.forEach { cargo ->
+                            DropdownMenuItem(
+                                text = { Text(cargo) },
+                                onClick = {
+                                    viewModel.onCargoChange(cargo)
+                                    expandedCargo = false
+                                }
+                            )
+                        }
                     }
+                }
+                estado.errores.cargo?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
                 }
             }
 
-            estado.errores.cargo?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            // Departamento
-            ExposedDropdownMenuBox(
-                expanded = expandedDpto,
-                onExpandedChange = { expandedDpto = !expandedDpto }
-            ) {
-                OutlinedTextField(
-                    value = estado.dpto_gcia_area,
-                    onValueChange = {},
-                    label = { Text("Departamento / Gerencia / Área") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDpto) },
-                    readOnly = true,
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-                    isError = estado.errores.dpto_gcia_area != null
-                )
-                ExposedDropdownMenu(
+            // Departamento (ExposedDropdown)
+            item {
+                ExposedDropdownMenuBox(
                     expanded = expandedDpto,
-                    onDismissRequest = { expandedDpto = false }
+                    onExpandedChange = { expandedDpto = !expandedDpto }
                 ) {
-                    viewModel.dptos.forEach { dpto ->
-                        DropdownMenuItem(
-                            text = { Text(dpto) },
-                            onClick = {
-                                viewModel.onDptoGciaAreaChange(dpto)
-                                expandedDpto = false
-                            }
-                        )
+                    OutlinedTextField(
+                        value = estado.dpto_gcia_area,
+                        onValueChange = {},
+                        label = { Text("Departamento / Gerencia / Área") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDpto) },
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        isError = estado.errores.dpto_gcia_area != null
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDpto,
+                        onDismissRequest = { expandedDpto = false }
+                    ) {
+                        viewModel.dptos.forEach { dpto ->
+                            DropdownMenuItem(
+                                text = { Text(dpto) },
+                                onClick = {
+                                    viewModel.onDptoGciaAreaChange(dpto)
+                                    expandedDpto = false
+                                }
+                            )
+                        }
                     }
+                }
+                estado.errores.dpto_gcia_area?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
                 }
             }
 
-            estado.errores.dpto_gcia_area?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            item { Spacer(modifier = Modifier.height(12.dp)) }
 
             // Botón siguiente
-            Button(
-                onClick = {
-                    val valido = viewModel.validarFormulario()
-                    if (valido) {
-                        if (onNextClick != null) {
-                            onNextClick()
+            item {
+                Button(
+                    onClick = {
+                        val valido = viewModel.validarFormulario()
+                        if (valido) {
+                            onNextClick?.invoke() ?: navController.navigate(siguienteRuta)
                         } else {
-                            navController.navigate(siguienteRuta)
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Completa todos los campos correctamente")
+                            }
                         }
-                    } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Completa todos los campos correctamente")
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Siguiente")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Siguiente") }
             }
 
-
             // Botón volver
-            Button(
-                onClick = {
-                    navController.navigate("menu") {
-                        popUpTo("menu") { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("Volver al Menú")
+            item {
+                Button(
+                    onClick = {
+                        navController.navigate("menu") {
+                            popUpTo("menu") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) { Text("Volver al Menú") }
             }
         }
     }

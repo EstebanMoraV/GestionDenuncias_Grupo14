@@ -17,7 +17,7 @@ fun VictimaScreen(
     viewModel: FormularioPersonaViewModel = viewModel()
 ) {
     FormularioPersonaScreen(
-        titulo = "Formulario Víctima",
+        titulo = "Ingrese los datos de la Víctima",
         navController = navController,
         viewModel = viewModel,
         siguienteRuta = "tipodenuncia",

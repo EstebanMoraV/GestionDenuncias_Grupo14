@@ -15,21 +15,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gestiondenuncias_grupo14.R
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
+import com.example.gestiondenuncias_grupo14.ui.complements.LoadingIndicator
+import com.example.gestiondenuncias_grupo14.ui.complements.CustomDialog
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()) {
 
-    // Prellenado de campos
+    // Estados UI
     var username by remember { mutableStateOf("es@gmail.com") }
     var password by remember { mutableStateOf("123456") }
     var cargando by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Registro automático del usuario por defecto
+    // Registro automático del usuario por defecto (solo si no existe sesión)
     LaunchedEffect(Unit) {
         if (viewModel.usuarioActual == null) {
             viewModel.registrarUsuario(
@@ -47,13 +51,18 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Inicio de Sesión (Login)") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+            // TopBarApp (complement) integrado
+            if (navController != null) {
+                TopBarApp(title = "Inicio de Sesión (Login)", navController = navController)
+            } else {
+                TopAppBar(
+                    title = { Text("Inicio de Sesión (Login)") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
-            )
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
@@ -97,6 +106,7 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Botón de login
             Button(
                 onClick = {
                     cargando = true
@@ -114,27 +124,18 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                         cargando = false
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !cargando
             ) {
-                if (cargando) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(end = 8.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
-                        Text("Cargando...")
-                    }
-                } else {
-                    Text("Ingresar")
-                }
+                Text("Ingresar")
             }
 
+            // LoadingIndicator (complement) durante la carga
+            if (cargando) {
+                LoadingIndicator()
+            }
+
+            // Enlace a registro
             TextButton(
                 onClick = { navController?.navigate("registro") },
                 colors = ButtonDefaults.textButtonColors(
@@ -143,10 +144,33 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
             ) {
                 Text("¿No tienes cuenta? Regístrate aquí")
             }
+
+            // Botón Salir (muestra diálogo de confirmación)
+            TextButton(
+                onClick = { showExitDialog = true },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Salir")
+            }
         }
     }
-}
 
+    // CustomDialog (complement) para confirmar salida
+    CustomDialog(
+        showDialog = showExitDialog,
+        title = "Confirmar salida",
+        message = "¿Deseas salir de la aplicación?",
+        confirmText = "Sí, salir",
+        dismissText = "Cancelar",
+        onConfirm = {
+            showExitDialog = false
+            navController?.navigate("salir")
+        },
+        onDismiss = { showExitDialog = false }
+    )
+}
 
 
 

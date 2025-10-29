@@ -22,7 +22,7 @@ fun DenunciadoScreen(
 
 
     FormularioPersonaScreen(
-        titulo = "Formulario Denunciado",
+        titulo = "Ingrese los datos del Denunciado",
         navController = navController,
         viewModel = viewModel,
         siguienteRuta = "representante",

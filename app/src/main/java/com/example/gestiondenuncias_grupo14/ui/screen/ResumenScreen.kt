@@ -7,15 +7,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioDBViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ResumenScreen(
@@ -24,9 +29,14 @@ fun ResumenScreen(
 ) {
     val estado by globalViewModel.estado.collectAsState()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val dbViewModel: FormularioDBViewModel = viewModel()
 
     Scaffold(
-        topBar = { TopBarApp(title = "Resumen del Formulario", navController = navController) }
+        topBar = { TopBarApp(title = "Resumen del Formulario", navController = navController) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
 
         Column(
@@ -106,14 +116,75 @@ fun ResumenScreen(
 
             Divider()
 
-            // boton final
-            Spacer(modifier = Modifier.height(16.dp))
+            // 🔹 BOTÓN GUARDAR EN BASE DE DATOS
             Button(
-                onClick = { globalViewModel.limpiarFormulario() },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                onClick = {
+                    val formulario = com.example.gestiondenuncias_grupo14.data.local.entity.FormularioEntity(
+                        // Denunciado
+                        denunciadoNombre = estado.denunciado.nombre,
+                        denunciadoApellidoPaterno = estado.denunciado.apellido_paterno,
+                        denunciadoApellidoMaterno = estado.denunciado.apellido_materno,
+                        denunciadoRut = estado.denunciado.rut,
+                        denunciadoCargo = estado.denunciado.cargo,
+                        denunciadoArea = estado.denunciado.dpto_gcia_area,
+
+                        // Representante
+                        representanteNombre = estado.representante.nombre,
+                        representanteApellidoPaterno = estado.representante.apellido_paterno,
+                        representanteApellidoMaterno = estado.representante.apellido_materno,
+                        representanteRut = estado.representante.rut,
+                        representanteCargo = estado.representante.cargo,
+                        representanteArea = estado.representante.dpto_gcia_area,
+
+                        // Víctima
+                        victimaNombre = estado.victima.nombre,
+                        victimaApellidoPaterno = estado.victima.apellido_paterno,
+                        victimaApellidoMaterno = estado.victima.apellido_materno,
+                        victimaRut = estado.victima.rut,
+                        victimaCargo = estado.victima.cargo,
+                        victimaArea = estado.victima.dpto_gcia_area,
+
+                        // Testigo
+                        testigoNombre = estado.testigo.nombre,
+                        testigoApellidoPaterno = estado.testigo.apellido_paterno,
+                        testigoApellidoMaterno = estado.testigo.apellido_materno,
+                        testigoRut = estado.testigo.rut,
+                        testigoCargo = estado.testigo.cargo,
+                        testigoArea = estado.testigo.dpto_gcia_area,
+
+                        // Tipo de denuncia
+                        tiposSeleccionados = estado.tipoDenuncia.tiposSeleccionados.joinToString(", "),
+                        relacionAsimetricaVictimaDepende = estado.tipoDenuncia.relacionAsimetricaVictimaDepende,
+                        relacionAsimetricaDenunciadoDepende = estado.tipoDenuncia.relacionAsimetricaDenunciadoDepende,
+                        relacionSimetricaMismaArea = estado.tipoDenuncia.relacionSimetricaMismaArea,
+                        relacionSimetricaDistintaArea = estado.tipoDenuncia.relacionSimetricaDistintaArea,
+
+                        // Evidencia
+                        evidenciaExistente = estado.evidencia.evidenciaExistente,
+                        otrosAntecedentes = estado.evidencia.otrosAntecedentes,
+                        informadaPreviamente = estado.evidencia.informadaPreviamente,
+                        cuentaConTestigos = estado.evidencia.cuentaConTestigos,
+
+                        // Relato
+                        relatoTexto = estado.relato.texto,
+                        relatoAudioPath = estado.relato.audioPath
+                    )
+
+                    dbViewModel.guardar(formulario)
+                    // Muestra mensaje de confirmación
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Formulario guardado correctamente.")
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Limpiar formulario")
+                Text("Guardar Formulario")
             }
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+
 
             Spacer(modifier = Modifier.height(8.dp))
             Button(
