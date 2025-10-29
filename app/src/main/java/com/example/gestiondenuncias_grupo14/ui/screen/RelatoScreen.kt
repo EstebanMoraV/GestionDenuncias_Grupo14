@@ -29,9 +29,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -39,7 +41,10 @@ import java.io.File
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RelatoScreen(navController: NavController) {
+fun RelatoScreen(
+    navController: NavController,
+    globalViewModel: FormularioGlobalViewModel = viewModel()
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -118,7 +123,10 @@ fun RelatoScreen(navController: NavController) {
                 // Campo texto
                 OutlinedTextField(
                     value = texto,
-                    onValueChange = { if (it.length <= maxCaracteres) texto = it },
+                    onValueChange = {
+                        if (it.length <= maxCaracteres) texto = it
+                        globalViewModel.guardarRelatoTexto(it) // guarda el texto
+                    },
                     label = { Text("Escribe tu relato aquí...") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -152,7 +160,7 @@ fun RelatoScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // btn grabar
+                // Botón grabar
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
@@ -231,11 +239,11 @@ fun RelatoScreen(navController: NavController) {
                     )
                 }
 
-                // Reproducir / Borrar / Progreso
+                // Reproducir y borrar
                 archivoAudio?.let { archivo ->
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón reproducir/pausar
+                    // Botón reproducir
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -285,7 +293,7 @@ fun RelatoScreen(navController: NavController) {
                         }
                     }
 
-                    // Barra de progreso
+                    // Barra progreso
                     if (duracionAudio > 0) {
                         val progreso = (posicionActual.toFloat() / duracionAudio.toFloat()).coerceIn(0f, 1f)
                         LinearProgressIndicator(
@@ -307,7 +315,6 @@ fun RelatoScreen(navController: NavController) {
                         )
                     }
 
-                    // btn borrar grabacion
                     Spacer(modifier = Modifier.height(20.dp))
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -331,17 +338,15 @@ fun RelatoScreen(navController: NavController) {
                 }
             }
 
-            // btn finalizar
+            // Botón Finalizar
             Button(
                 onClick = {
-                    mediaRecorder = MediaRecorder(context).apply {
-                        setAudioSource(MediaRecorder.AudioSource.MIC)
-                        setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP) // cambia a 3GP por compatibilidad
-                        setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                        setOutputFile(archivoAudio!!.absolutePath)
-                        prepare()
-                        start()
+                    // Guarda texto y ruta del audio en el ViewModel global
+                    globalViewModel.guardarRelatoTexto(texto)
+                    archivoAudio?.let {
+                        globalViewModel.guardarRelatoAudio(it.absolutePath)
                     }
+
                     navController.navigate("resumen") {
                         popUpTo("relato") { inclusive = true }
                     }
@@ -360,7 +365,6 @@ fun RelatoScreen(navController: NavController) {
         }
     }
 
-    // confirmacion para borrar grabacion
     if (mostrarDialogoBorrar) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoBorrar = false },
@@ -395,3 +399,4 @@ fun RelatoScreenPreview() {
         RelatoScreen(navController = mockNavController)
     }
 }
+

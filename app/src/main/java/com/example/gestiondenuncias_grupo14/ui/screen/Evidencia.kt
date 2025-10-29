@@ -15,15 +15,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
-import com.example.gestiondenuncias_grupo14.viewmodel.EvidenciaViewModel
+import com.example.gestiondenuncias_grupo14.viewmodel.EvidenciaData
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EvidenciaScreen(
     navController: NavController,
-    viewModel: EvidenciaViewModel = viewModel()
+    globalViewModel: FormularioGlobalViewModel = viewModel()
 ) {
-    val estado by viewModel.estado.collectAsState()
+    var evidenciaExistente by remember { mutableStateOf(false) }
+    var otrosAntecedentes by remember { mutableStateOf(false) }
+    var informadaPreviamente by remember { mutableStateOf(false) }
+    var cuentaConTestigos by remember { mutableStateOf(false) }
+
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -47,52 +52,52 @@ fun EvidenciaScreen(
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.4f))
 
-            // Switch 1
             EvidenciaSwitch(
                 texto = "¿Existe evidencia de lo denunciado (email, fotos, etc.)?",
-                valor = estado.evidenciaExistente,
-                onChange = { viewModel.cambiarEvidenciaExistente(it) }
+                valor = evidenciaExistente,
+                onChange = { evidenciaExistente = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.4f))
 
-            // Switch 2
             EvidenciaSwitch(
                 texto = "¿Existe conocimiento de otros antecedentes de índole similar?",
-                valor = estado.otrosAntecedentes,
-                onChange = { viewModel.cambiarOtrosAntecedentes(it) }
+                valor = otrosAntecedentes,
+                onChange = { otrosAntecedentes = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.4f))
 
-            // Switch 3
             EvidenciaSwitch(
                 texto = "¿La situación denunciada fue informada previamente en otra instancia similar (Jefatura, supervisor, mediación laboral, etc.)?",
-                valor = estado.informadaPreviamente,
-                onChange = { viewModel.cambiarInformadaPreviamente(it) }
+                valor = informadaPreviamente,
+                onChange = { informadaPreviamente = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.4f))
 
-            // Switch 4
             EvidenciaSwitch(
                 texto = "¿Cuenta con testigos de los sucesos?",
-                valor = estado.cuentaConTestigos,
-                onChange = { viewModel.cambiarCuentaConTestigos(it) }
+                valor = cuentaConTestigos,
+                onChange = { cuentaConTestigos = it }
             )
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Botón para continuar
             Button(
                 onClick = {
-                    if (estado.cuentaConTestigos) {
-                        // Si hay testigos, ir a TestigoScreen
+                    val datos = EvidenciaData(
+                        evidenciaExistente = evidenciaExistente,
+                        otrosAntecedentes = otrosAntecedentes,
+                        informadaPreviamente = informadaPreviamente,
+                        cuentaConTestigos = cuentaConTestigos
+                    )
+                    globalViewModel.guardarEvidencia(datos)
+
+                    if (cuentaConTestigos)
                         navController.navigate("testigo")
-                    } else {
-                        // Si no hay testigos, ir a RelatoScreen
+                    else
                         navController.navigate("relato")
-                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
@@ -103,7 +108,6 @@ fun EvidenciaScreen(
     }
 }
 
-// 🔧 Componente reutilizable para switches
 @Composable
 fun EvidenciaSwitch(
     texto: String,
@@ -140,3 +144,4 @@ fun EvidenciaScreenPreview() {
         EvidenciaScreen(navController = navController)
     }
 }
+
