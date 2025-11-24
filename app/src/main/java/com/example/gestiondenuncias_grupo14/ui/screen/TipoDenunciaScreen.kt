@@ -10,23 +10,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
-import com.example.gestiondenuncias_grupo14.viewmodel.TipoDenunciaViewModel
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
+import com.example.gestiondenuncias_grupo14.viewmodel.TipoDenunciaData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TipoDenunciaScreen(
     navController: NavController,
-    viewModel: TipoDenunciaViewModel = viewModel()
+    globalViewModel: FormularioGlobalViewModel = viewModel()
 ) {
-    val estado by viewModel.estado.collectAsState()
-    val scrollState = rememberScrollState() //estado del scroll
+    // Estado local temporal
+    var tiposSeleccionados by remember { mutableStateOf(listOf<String>()) }
+    var relacionAsimetricaVictimaDepende by remember { mutableStateOf(false) }
+    var relacionAsimetricaDenunciadoDepende by remember { mutableStateOf(false) }
+    var relacionSimetricaMismaArea by remember { mutableStateOf(false) }
+    var relacionSimetricaDistintaArea by remember { mutableStateOf(false) }
 
     val opciones = listOf(
         "Acoso laboral",
@@ -34,6 +38,8 @@ fun TipoDenunciaScreen(
         "Maltrato psicológico",
         "Discriminación"
     )
+
+    val scrollState = rememberScrollState()
 
     Scaffold(
         topBar = { TopBarApp(title = "Tipo de Denuncia", navController = navController) }
@@ -44,8 +50,7 @@ fun TipoDenunciaScreen(
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(scrollState) // desplazamiento fluido
-                .nestedScroll(TopAppBarDefaults.pinnedScrollBehavior().nestedScrollConnection), // 👈 integración con topbar
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -55,15 +60,21 @@ fun TipoDenunciaScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
+            // ✅ Botones tipo selección múltiple
             opciones.forEach { opcion ->
-                val seleccionada = opcion in estado.tiposSeleccionados
+                val seleccionada = opcion in tiposSeleccionados
                 val colorFondo by animateColorAsState(
                     if (seleccionada) Color(0xFF4CAF50) else Color(0xFF2196F3),
                     label = "Color de selección"
                 )
 
                 Button(
-                    onClick = { viewModel.toggleTipo(opcion) },
+                    onClick = {
+                        tiposSeleccionados = if (seleccionada)
+                            tiposSeleccionados - opcion
+                        else
+                            tiposSeleccionados + opcion
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -74,51 +85,63 @@ fun TipoDenunciaScreen(
                 }
             }
 
-            Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.4f))
+            Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.3f))
 
             Text(
                 text = "Relación entre víctima y denunciado/a:",
                 style = MaterialTheme.typography.titleMedium
             )
 
+            // Switch 1
             RelacionSwitch(
-                texto = "¿Existe una relación asimétrica en que la víctima " +
-                        "tiene dependencia directa o indirecta de el/la denunciado/a?",
-                valor = estado.relacionAsimetricaVictimaDepende,
-                onChange = { viewModel.cambiarRelacionAsimetricaVictima(it) }
+                texto = "¿Existe una relación asimétrica en que la víctima tiene dependencia directa o indirecta de el/la denunciado/a?",
+                valor = relacionAsimetricaVictimaDepende,
+                onChange = { relacionAsimetricaVictimaDepende = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.3f))
 
+            // Switch 2
             RelacionSwitch(
-                texto = "¿Existe una relación asimétrica en que el/la denunciado/a " +
-                        "tiene dependencia directa o indirecta de la víctima?",
-                valor = estado.relacionAsimetricaDenunciadoDepende,
-                onChange = { viewModel.cambiarRelacionAsimetricaDenunciado(it) }
+                texto = "¿Existe una relación asimétrica en que el/la denunciado/a tiene dependencia directa o indirecta de la víctima?",
+                valor = relacionAsimetricaDenunciadoDepende,
+                onChange = { relacionAsimetricaDenunciadoDepende = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.3f))
 
+            // Switch 3
             RelacionSwitch(
-                texto = "¿Existe una relación simétrica en que el/la denunciado/a y la víctima " +
-                        "no tienen una dependencia directa ni indirecta, pero se desempeñan en la misma área o equipo?",
-                valor = estado.relacionSimetricaMismaArea,
-                onChange = { viewModel.cambiarRelacionSimetricaMismaArea(it) }
+                texto = "¿Existe una relación simétrica en que ambos se desempeñan en la misma área o equipo?",
+                valor = relacionSimetricaMismaArea,
+                onChange = { relacionSimetricaMismaArea = it }
             )
 
             Divider(thickness = 1.dp, color = Color.Gray.copy(alpha = 0.3f))
 
+            // Switch 4
             RelacionSwitch(
-                texto = "¿Existe una relación simétrica en que el/la denunciado/a y la víctima no " +
-                        "tienen una dependencia directa ni indirecta, pero no se desempeñan en la misma área o equipo?",
-                valor = estado.relacionSimetricaDistintaArea,
-                onChange = { viewModel.cambiarRelacionSimetricaDistintaArea(it) }
+                texto = "¿Existe una relación simétrica en que no trabajan en la misma área ni equipo?",
+                valor = relacionSimetricaDistintaArea,
+                onChange = { relacionSimetricaDistintaArea = it }
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // ✅ Botón siguiente
             Button(
-                onClick = { navController.navigate("evidencia") },
+                onClick = {
+                    // Guardamos los datos globalmente
+                    val tipoData = TipoDenunciaData(
+                        tiposSeleccionados = tiposSeleccionados,
+                        relacionAsimetricaVictimaDepende = relacionAsimetricaVictimaDepende,
+                        relacionAsimetricaDenunciadoDepende = relacionAsimetricaDenunciadoDepende,
+                        relacionSimetricaMismaArea = relacionSimetricaMismaArea,
+                        relacionSimetricaDistintaArea = relacionSimetricaDistintaArea
+                    )
+                    globalViewModel.guardarTipoDenuncia(tipoData)
+                    navController.navigate("evidencia")
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -128,16 +151,15 @@ fun TipoDenunciaScreen(
     }
 }
 
+// 🔧 Reutilizable
 @Composable
 fun RelacionSwitch(
     texto: String,
     valor: Boolean,
     onChange: (Boolean) -> Unit
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Text(text = texto, style = MaterialTheme.typography.bodyMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(texto, style = MaterialTheme.typography.bodyMedium)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -166,7 +188,6 @@ fun TipoDenunciaScreenPreview() {
         TipoDenunciaScreen(navController = navController)
     }
 }
-
 
 
 

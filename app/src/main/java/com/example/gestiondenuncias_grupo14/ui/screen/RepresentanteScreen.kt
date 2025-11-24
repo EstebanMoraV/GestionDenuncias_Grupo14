@@ -1,22 +1,25 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.material3.*
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.gestiondenuncias_grupo14.model.Denunciado
 import com.example.gestiondenuncias_grupo14.viewmodel.FormularioPersonaViewModel
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 import com.example.gestiondenuncias_grupo14.ui.complements.CustomDialog
 
 @Composable
 fun RepresentanteScreen(
     navController: NavController,
+    globalViewModel: FormularioGlobalViewModel = viewModel(),
     viewModel: FormularioPersonaViewModel = viewModel()
 ) {
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // Diálogo reutilizable desde complements
+    // Diálogo reutilizable: ¿Usted es la víctima?
     CustomDialog(
         showDialog = mostrarDialogo,
         title = "Confirmar identidad",
@@ -25,29 +28,48 @@ fun RepresentanteScreen(
         dismissText = "No",
         onConfirm = {
             mostrarDialogo = false
-            navController.navigate("tipodenuncia") // Nueva ruta
+            // Si es la víctima, abre el siguiente formulario
+            navController.navigate("tipodenuncia")
         },
         onDismiss = {
             mostrarDialogo = false
+            // Si no es la víctima, abre el formulario de víctima
             navController.navigate("victima")
         }
     )
 
-    // Reutilizamos el formulario con onNextClick
+    // Reutiliza el formulario base
     FormularioPersonaScreen(
-        titulo = "Formulario Representante",
+        titulo = "Datos del Representante de la empresa",
         navController = navController,
         viewModel = viewModel,
-        siguienteRuta = "victima", // ruta por defecto
-        onNextClick = { mostrarDialogo = true } // intercepta el click
+        // ruta por defecto
+        siguienteRuta = "victima",
+        onNextClick = {
+            if (viewModel.validarFormulario()) {
+                // Construye el objeto con tu modelo real
+                val persona = Denunciado(
+                    nombre = viewModel.estado.value.nombre,
+                    apellido_paterno = viewModel.estado.value.apellido_paterno,
+                    apellido_materno = viewModel.estado.value.apellido_materno,
+                    rut = viewModel.estado.value.rut,
+                    cargo = viewModel.estado.value.cargo,
+                    dpto_gcia_area = viewModel.estado.value.dpto_gcia_area
+                )
+                // Guarda en el estado global como "representante"
+                globalViewModel.guardarPersona("representante", persona)
+                // Abre el diálogo de confirmación
+                mostrarDialogo = true
+            }
+        }
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun RepresentanteScreenPreview() {
-    val navController = rememberNavController()
+    val mockNavController = rememberNavController()
     MaterialTheme {
-        RepresentanteScreen(navController = navController)
+        RepresentanteScreen(navController = mockNavController)
     }
 }

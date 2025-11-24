@@ -145,7 +145,7 @@ fun QuienSomosScreen(navController: NavController) {
 
                 // Créditos extra o frase inspiradora
                 Text(
-                    text = "Construyendo soluciones con empatía y tecnología ❤️",
+                    text = "Construyendo soluciones con empatía y tecnología.",
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center

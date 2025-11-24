@@ -49,9 +49,6 @@ fun SeleccionDenuncia(){
 }
 
 
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun Preview(){

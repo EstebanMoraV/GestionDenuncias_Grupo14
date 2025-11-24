@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,12 +21,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
+import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
 import java.io.File
 import java.io.FileOutputStream
 
-// Función para guardar el bitmap en caché y obtener su URI
+// Guarda el bitmap en caché y retorna su URI
 fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
     val file = File(context.cacheDir, "foto_temp.jpg")
     FileOutputStream(file).use { out ->
@@ -38,7 +39,10 @@ fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewModel) {
+fun MenuPrincipal(
+    navController: NavController? = null,
+    viewModel: UsuarioViewModel
+) {
     val usuario = viewModel.usuarioActual
     val nombre = usuario?.nombre ?: "Invitado"
     val empresa = usuario?.empresa ?: "Sin empresa"
@@ -53,28 +57,35 @@ fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewMo
         else -> MaterialTheme.colorScheme.background
     }
 
-    //var fotoUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-    val fotoUri = viewModel.fotoUri
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+    // --- FIX 1: Hacer fotoUri observable para recomposición
+    var fotoUri by remember { mutableStateOf<Uri?>(viewModel.fotoUri) }
+
+    // Launcher para TakePicturePreview (no recibe parámetros)
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
         if (bitmap != null) {
-            viewModel.fotoUri = saveBitmapToCache(context, bitmap)
+            val uri = saveBitmapToCache(context, bitmap)
+            viewModel.fotoUri = uri
+            fotoUri = uri // actualizar el estado Compose
         }
     }
 
-
-
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Menú Principal") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+            if (navController != null) {
+                TopBarApp(title = "Menú Principal", navController = navController)
+            } else {
+                TopAppBar(
+                    title = { Text("Menú Principal") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
-            )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -105,13 +116,14 @@ fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewMo
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text(text = "Cargo: $cargo", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = "Depto: $depto", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = "Correo: $correo", style = MaterialTheme.typography.bodyMedium)
-                    Text(text = "Empresa: $empresa", style = MaterialTheme.typography.bodyMedium)
+                    if (cargo.isNotBlank()) Text("Cargo: $cargo", style = MaterialTheme.typography.bodyMedium)
+                    if (depto.isNotBlank()) Text("Depto: $depto", style = MaterialTheme.typography.bodyMedium)
+                    if (correo.isNotBlank()) Text("Correo: $correo", style = MaterialTheme.typography.bodyMedium)
+                    Text("Empresa: $empresa", style = MaterialTheme.typography.bodyMedium)
                 }
 
-                IconButton(onClick = { launcher.launch() }) {
+                // --- FIX 2: launch(null) para contratos Void? (TakePicturePreview)
+                IconButton(onClick = { launcher.launch(null) }) {
                     Icon(
                         imageVector = Icons.Filled.CameraAlt,
                         contentDescription = "Tomar foto",
@@ -122,10 +134,9 @@ fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewMo
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Comenzar flujo de denuncia
             Button(
-                onClick = {
-                    navController?.navigate("denunciado")
-                },
+                onClick = { navController?.navigate("denunciado") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -140,6 +151,16 @@ fun MenuPrincipal(navController: NavController? = null, viewModel: UsuarioViewMo
                 )
             }
 
+            // Ver historial de formularios guardados (Room)
+            OutlinedButton(
+                onClick = { navController?.navigate("historial") },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Text("Ver historial de formularios")
+            }
         }
     }
 }
@@ -161,8 +182,8 @@ fun PreviewMenuPrincipal() {
         )
         login("juan@example.com", "123456")
     }
-
+    val nav = rememberNavController()
     MaterialTheme {
-        MenuPrincipal(viewModel = viewModel)
+        MenuPrincipal(navController = nav, viewModel = viewModel)
     }
 }

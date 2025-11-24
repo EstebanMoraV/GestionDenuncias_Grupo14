@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondenuncias_grupo14.navigation.AppNavigation
-import com.example.gestiondenuncias_grupo14.ui.theme.GestionDenuncias_Grupo14Theme
+import com.example.gestiondenuncias_grupo14.ui.theme.GestionDenuncias_Grupo14Theme // 👈 Importante
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            // 👇 Aquí aplicamos tu tema completo
             GestionDenuncias_Grupo14Theme {
                 val navController = rememberNavController()
                 AppNavigation(navController = navController)
