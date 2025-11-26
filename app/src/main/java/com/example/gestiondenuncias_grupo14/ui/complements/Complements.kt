@@ -19,7 +19,8 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun TopBarApp(
     title: String,
-    navController: NavController
+    navController: NavController,
+    color: Color = Color(0xFF14284B) // default
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
@@ -76,14 +77,14 @@ fun TopBarApp(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF14284B),
+            containerColor = color,
             titleContentColor = Color.White,
             navigationIconContentColor = Color.White
 
         )
     )
 
-    // ✅ Diálogo de confirmación (usando tu CustomDialog)
+    //  Diálogo de confirmación (usando tu CustomDialog)
     CustomDialog(
         showDialog = showExitDialog,
         title = "Confirmar salida",

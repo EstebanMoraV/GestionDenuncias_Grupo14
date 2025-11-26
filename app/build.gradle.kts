@@ -11,6 +11,7 @@ android {
     namespace = "com.example.gestiondenuncias_grupo14"
     compileSdk {
         version = release(36)
+
     }
 
     defaultConfig {
@@ -42,6 +43,7 @@ android {
     buildFeatures {
         compose = true
     }
+
 }
 
 dependencies {
@@ -68,15 +70,17 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-// --- ROOM (Base de datos local) ---
+    // ROOM (Base de datos local)
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.room:room-paging:2.6.1")
 
-// --- Fix de compatibilidad con Kotlin 2.2.20 ---
+    // Fix de compatibilidad con Kotlin 2.2.20
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.8.0")
 
+    // JUnit 4
+    testImplementation("junit:junit:4.13.2")
 
 
 
