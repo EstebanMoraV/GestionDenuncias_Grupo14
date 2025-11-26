@@ -16,18 +16,18 @@ import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
 import com.example.gestiondenuncias_grupo14.ui.complements.LoadingIndicator
 import com.example.gestiondenuncias_grupo14.ui.complements.CustomDialog
 import com.example.gestiondenuncias_grupo14.viewmodel.UsuarioViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.livedata.observeAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()) {
-    // Variables de entrada
+    // Variables de entrada del formulario
     var rut by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
     var apellido by remember { mutableStateOf("") }
@@ -43,7 +43,7 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
     var expandedCargo by remember { mutableStateOf(false) }
     var expandedDepto by remember { mutableStateOf(false) }
 
-    // Listas
+    // Listas de opciones
     val empresas = listOf("Productos Cave", "Diprovet", "Lubricantes Internacionales")
     val cargos = viewModel.cargos
     val dptos = viewModel.dptos
@@ -58,6 +58,9 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
 
     // Diálogo de confirmación (Cancelar)
     var showCancelDialog by remember { mutableStateOf(false) }
+
+    // Observamos el resultado remoto
+    val resultado by viewModel.resultado.observeAsState()
 
     Scaffold(
         topBar = {
@@ -94,7 +97,6 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
                     color = colorScheme.primary
                 )
 
-                // Campos de texto normales
                 RegistroTextField("Rut", "12345678-9", rut) { rut = it }
                 RegistroTextField("Nombre", "Ingrese su nombre", nombre) { nombre = it }
                 RegistroTextField("Apellido", "Ingrese su apellido", apellido) { apellido = it }
@@ -102,46 +104,31 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
                 RegistroTextField("Contraseña", "Ingrese su contraseña", contrasena) { contrasena = it }
                 RegistroTextField("Confirmar", "Repita su contraseña", confirmarContrasena) { confirmarContrasena = it }
 
-                // Combo Empresa
                 ComboBoxField(
-                    label = "Empresa",
-                    value = empresa,
-                    expanded = expandedEmpresa,
-                    options = empresas,
-                    onClick = { seleccion ->
-                        empresa = seleccion
-                        expandedEmpresa = false
-                    },
+                    "Empresa",
+                    empresa,
+                    expandedEmpresa,
+                    empresas,
+                    onClick = { empresa = it; expandedEmpresa = false },
                     onExpandedChange = { expandedEmpresa = !expandedEmpresa }
                 )
-
-                // Combo Cargo
                 ComboBoxField(
-                    label = "Cargo",
-                    value = cargo,
-                    expanded = expandedCargo,
-                    options = cargos,
-                    onClick = { seleccion ->
-                        cargo = seleccion
-                        expandedCargo = false
-                    },
+                    "Cargo",
+                    cargo,
+                    expandedCargo,
+                    cargos,
+                    onClick = { cargo = it; expandedCargo = false },
                     onExpandedChange = { expandedCargo = !expandedCargo }
                 )
-
-                // Combo Departamento
                 ComboBoxField(
-                    label = "Depto - Área",
-                    value = dep_area,
-                    expanded = expandedDepto,
-                    options = dptos,
-                    onClick = { seleccion ->
-                        dep_area = seleccion
-                        expandedDepto = false
-                    },
+                    "Depto - Área",
+                    dep_area,
+                    expandedDepto,
+                    dptos,
+                    onClick = { dep_area = it; expandedDepto = false },
                     onExpandedChange = { expandedDepto = !expandedDepto }
                 )
 
-                // Botones de acción
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -151,31 +138,22 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
                             val error = viewModel.validarCampos(
                                 rut, nombre, apellido, correo, contrasena, empresa, cargo, dep_area
                             )
+
                             if (error != null) {
                                 scope.launch { snackbarHostState.showSnackbar(error) }
                                 return@Button
                             }
+
                             if (contrasena != confirmarContrasena) {
                                 scope.launch { snackbarHostState.showSnackbar("Las contraseñas no coinciden") }
                                 return@Button
                             }
 
-                            // Simular carga + registrar
-                            scope.launch {
-                                isLoading = true
-                                delay(1500)
-                                val exito = viewModel.registrarUsuario(
-                                    rut, nombre, apellido, correo, contrasena, empresa, cargo, dep_area
-                                )
-                                isLoading = false
+                            isLoading = true
 
-                                if (exito) {
-                                    snackbarHostState.showSnackbar("Usuario registrado con éxito")
-                                    navController?.navigate("login")
-                                } else {
-                                    snackbarHostState.showSnackbar("El usuario ya está registrado")
-                                }
-                            }
+                            viewModel.registrarUsuarioRemoto(
+                                rut, nombre, apellido, correo, contrasena, empresa, cargo, dep_area
+                            )
                         },
                         modifier = Modifier.weight(1f),
                         enabled = !isLoading
@@ -193,7 +171,6 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
                 }
             }
 
-            // 🔄 Indicador de carga (Complement)
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -207,7 +184,23 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
         }
     }
 
-    // Diálogo de confirmación (Complement)
+    // Manejo del resultado remoto del ViewModel
+    LaunchedEffect(resultado) {
+        resultado?.let {
+            isLoading = false
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+                if (it.contains("exitosamente")) {
+                    kotlinx.coroutines.delay(2000)
+                    navController?.navigate("login")
+                }
+            }
+            viewModel.resetResultado() // Limpia el valor para que no se repita
+        }
+    }
+
+
+
     CustomDialog(
         showDialog = showCancelDialog,
         title = "Cancelar registro",
@@ -222,8 +215,17 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
     )
 }
 
+// -----------------------------------------------------------------------------
+// Componentes reutilizables
+// -----------------------------------------------------------------------------
+
 @Composable
-fun RegistroTextField(label: String, placeholder: String, value: String, onValueChange: (String) -> Unit) {
+fun RegistroTextField(
+    label: String,
+    placeholder: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -303,5 +305,3 @@ fun RegistroPreview() {
         Registro()
     }
 }
-
-

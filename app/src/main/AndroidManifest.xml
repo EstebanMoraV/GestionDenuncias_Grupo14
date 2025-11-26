@@ -30,5 +30,7 @@
             </intent-filter>
         </activity>
     </application>
-
+    <!-- Permiso necesario para hacer peticiones HTTP -->
+    <uses-permission android:name="android.permission.INTERNET"
+        tools:ignore="ManifestOrder" />
 </manifest>

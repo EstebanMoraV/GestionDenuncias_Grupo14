@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -24,34 +25,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = viewModel()) {
 
-    // Estados UI
-    var username by remember { mutableStateOf("es@gmail.com") }
-    var password by remember { mutableStateOf("123456") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var cargando by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Registro automático del usuario por defecto (solo si no existe sesión)
-    LaunchedEffect(Unit) {
-        if (viewModel.usuarioActual == null) {
-            viewModel.registrarUsuario(
-                rut = "19829659-7",
-                nombre = "Esteban",
-                apellido = "Mora",
-                correo = "es@gmail.com",
-                contrasena = "123456",
-                empresa = "Empresa de Prueba",
-                cargo = "Tester",
-                depto = "QA"
-            )
-        }
-    }
+    val loginResultado by viewModel.loginResultado.observeAsState()
 
     Scaffold(
         topBar = {
-            // TopBarApp (complement) integrado
             if (navController != null) {
                 TopBarApp(title = "Inicio de Sesión (Login)", navController = navController)
             } else {
@@ -78,7 +63,7 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 painter = painterResource(id = R.drawable.logo_empresa),
                 contentDescription = "Logo de la empresa",
                 modifier = Modifier
-                    .size(280.dp)
+                    .size(220.dp)
                     .padding(top = 16.dp)
             )
 
@@ -106,23 +91,10 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Botón de login
             Button(
                 onClick = {
                     cargando = true
-                    scope.launch {
-                        val exito = viewModel.login(username, password)
-                        if (exito) {
-                            snackbarHostState.showSnackbar("Inicio de sesión exitoso!")
-                            navController?.navigate("menu") {
-                                popUpTo("login") { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        } else {
-                            snackbarHostState.showSnackbar("Correo o Contraseña incorrectos")
-                        }
-                        cargando = false
-                    }
+                    viewModel.loginRemoto(username, password)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !cargando
@@ -130,12 +102,10 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 Text("Ingresar")
             }
 
-            // LoadingIndicator (complement) durante la carga
             if (cargando) {
                 LoadingIndicator()
             }
 
-            // Enlace a registro
             TextButton(
                 onClick = { navController?.navigate("registro") },
                 colors = ButtonDefaults.textButtonColors(
@@ -145,7 +115,6 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
                 Text("¿No tienes cuenta? Regístrate aquí")
             }
 
-            // Botón Salir (muestra diálogo de confirmación)
             TextButton(
                 onClick = { showExitDialog = true },
                 colors = ButtonDefaults.textButtonColors(
@@ -157,7 +126,23 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
         }
     }
 
-    // CustomDialog (complement) para confirmar salida
+    LaunchedEffect(loginResultado) {
+        loginResultado?.let {
+            cargando = false
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+                if (it.contains("exitoso", ignoreCase = true)) {
+                    kotlinx.coroutines.delay(2000)
+                    navController?.navigate("menu") {
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+            viewModel.resetLoginResultado()
+        }
+    }
+
     CustomDialog(
         showDialog = showExitDialog,
         title = "Confirmar salida",
@@ -171,6 +156,3 @@ fun Login(navController: NavController? = null, viewModel: UsuarioViewModel = vi
         onDismiss = { showExitDialog = false }
     )
 }
-
-
-
