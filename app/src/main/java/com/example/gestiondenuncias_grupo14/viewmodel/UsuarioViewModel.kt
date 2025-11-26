@@ -6,6 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import com.example.gestiondenuncias_grupo14.model.Usuario
 import com.example.gestiondenuncias_grupo14.remote.RetrofitClient
 import com.example.gestiondenuncias_grupo14.remote.UsuarioRequest
+import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginRequest
+import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -13,55 +15,36 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginRequest
-import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginResponse
 
-/**
- * ViewModel responsable de la gestión de usuarios.
- * Contiene lógica local (cache en memoria, validaciones) y lógica remota (integración con microservicios vía Retrofit).
- */
 class UsuarioViewModel : ViewModel() {
 
     // -------------------------------------------------------------------------
     // Estado local
     // -------------------------------------------------------------------------
 
-    /** Lista de usuarios mantenida en memoria como cache temporal. */
     private val usuarios = mutableListOf<Usuario>()
 
-    /** Usuario actualmente autenticado en la aplicación. */
     var usuarioActual: Usuario? = null
         private set
 
-    /** URI de la foto seleccionada por el usuario (ejemplo: desde galería). */
     var fotoUri: Uri? by mutableStateOf(null)
 
     // -------------------------------------------------------------------------
-    // Datos estáticos para formularios
+    // Datos estáticos
     // -------------------------------------------------------------------------
 
-    /** Lista de cargos disponibles para selección en formularios. */
-    val cargos = listOf(
-        "Operario", "Técnico", "Analista", "Ingeniero", "Arquitecto", "Diseñador", "Programador",
-        "Desarrollador", "Tester", "Supervisor", "Coordinador", "Gerente de Proyectos",
+    val cargos = listOf("Operario", "Técnico", "Analista", "Ingeniero", "Arquitecto", "Diseñador",
+        "Programador", "Desarrollador", "Tester", "Supervisor", "Coordinador", "Gerente de Proyectos",
         "Jefe de Área", "Gerente", "Director", "Secretario", "Contador", "Auditor", "Vendedor",
-        "Minero", "Bombero", "Carabinero", "Otros"
-    )
+        "Minero", "Bombero", "Carabinero", "Otros")
 
-    /** Lista de departamentos disponibles para selección en formularios. */
-    val dptos = listOf(
-        "RRHH", "Producción", "Logística", "Marketing", "Finanzas",
-        "Comercial", "Legal", "Otros"
-    )
+    val dptos = listOf("RRHH", "Producción", "Logística", "Marketing", "Finanzas",
+        "Comercial", "Legal", "Otros")
 
     // -------------------------------------------------------------------------
-    // Funciones locales (sin conexión a servidor)
+    // Funciones locales
     // -------------------------------------------------------------------------
 
-    /**
-     * Registra un usuario en memoria local.
-     * @return true si el usuario fue registrado, false si ya existía un usuario con el mismo rut.
-     */
     fun registrarUsuario(
         rut: String,
         nombre: String,
@@ -72,27 +55,19 @@ class UsuarioViewModel : ViewModel() {
         cargo: String,
         depto: String
     ): Boolean {
-        if (usuarios.any { it.rut == rut }) {
-            return false
-        }
+        if (usuarios.any { it.rut == rut }) return false
         val nuevoUsuario = Usuario(rut, nombre, apellido, correo, contrasena, empresa, cargo, depto)
         usuarios.add(nuevoUsuario)
         usuarioActual = nuevoUsuario
         return true
     }
 
-    /**
-     * Realiza login contra la lista local de usuarios.
-     * @return true si las credenciales coinciden, false en caso contrario.
-     */
     fun login(correo: String, contrasena: String): Boolean {
         val usuario = usuarios.find { it.correo == correo && it.contrasena == contrasena }
         return if (usuario != null) {
             usuarioActual = usuario
             true
-        } else {
-            false
-        }
+        } else false
     }
 
     /**
@@ -123,17 +98,12 @@ class UsuarioViewModel : ViewModel() {
     }
 
     // -------------------------------------------------------------------------
-    // Integración remota con microservicio (Retrofit)
+    // Integración remota con microservicio
     // -------------------------------------------------------------------------
 
-    /** LiveData para observar el resultado de la operación remota de creación de usuario. */
     private val _resultado = MutableLiveData<String?>()
     val resultado: LiveData<String?> get() = _resultado
 
-    /**
-     * Registra un usuario en el microservicio remoto utilizando Retrofit.
-     * Actualiza el estado local en caso de éxito y publica el resultado en LiveData.
-     */
     fun registrarUsuarioRemoto(
         rut: String,
         nombre: String,
@@ -165,51 +135,52 @@ class UsuarioViewModel : ViewModel() {
             })
     }
 
+    // -------------------------------------------------------------------------
+    // Login remoto con datos reales
+    // -------------------------------------------------------------------------
 
-    // Dentro de UsuarioViewModel
-
-    /** LiveData para observar el resultado del login remoto. */
     private val _loginResultado = MutableLiveData<String?>()
     val loginResultado: LiveData<String?> get() = _loginResultado
 
-    /**
-     * Realiza login contra el microservicio de autenticación.
-     * Envía correo y contraseña, y publica el resultado en LiveData.
-     */
     fun loginRemoto(correo: String, contrasena: String) {
         val request = UsuarioLoginRequest(correo, contrasena)
 
         RetrofitClient.apiService.login(request)
-            .enqueue(object : Callback<String> {
-                override fun onResponse(call: Call<String>, response: Response<String>) {
+            .enqueue(object : Callback<UsuarioLoginResponse> {
+                override fun onResponse(
+                    call: Call<UsuarioLoginResponse>,
+                    response: Response<UsuarioLoginResponse>
+                ) {
                     if (response.isSuccessful) {
-                        // El backend devuelve directamente un String
-                        _loginResultado.postValue(response.body() ?: "Respuesta vacía")
+                        val body = response.body()
+                        if (body != null && body.mensaje.contains("exitoso", ignoreCase = true)) {
+                            usuarioActual = Usuario(
+                                rut = body.rut,
+                                nombre = body.nombre,
+                                apellido = body.apellido,
+                                correo = body.correo,
+                                contrasena = contrasena,
+                                empresa = body.empresa,
+                                cargo = body.cargo,
+                                depto = body.depto
+                            )
+                        }
+                        _loginResultado.postValue(body?.mensaje ?: "Respuesta vacía")
                     } else {
                         _loginResultado.postValue("Error en login: ${response.code()}")
                     }
                 }
 
-                override fun onFailure(call: Call<String>, t: Throwable) {
+                override fun onFailure(call: Call<UsuarioLoginResponse>, t: Throwable) {
                     _loginResultado.postValue("Fallo en la conexión: ${t.message}")
                 }
             })
     }
 
-
-    /**
-     * Limpia el resultado del login después de que la UI lo consuma.
-     * Esto evita que el mensaje se repita al volver a la pantalla.
-     */
     fun resetLoginResultado() {
         _loginResultado.value = null
     }
 
-
-    /**
-     * Limpia el valor de resultado después de que la UI lo haya consumido.
-     * Esto evita que el mensaje se repita al volver a la pantalla.
-     */
     fun resetResultado() {
         _resultado.value = null
     }

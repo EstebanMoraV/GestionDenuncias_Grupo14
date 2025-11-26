@@ -2,7 +2,11 @@ package com.example.gestiondenuncias_grupo14.remote
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 
 interface ApiService {
 
@@ -15,5 +19,23 @@ interface ApiService {
      * Recibe correo y contraseña, devuelve un mensaje de éxito o error.
      */
     @POST("/api/auth/login")
-    fun login(@Body request: UsuarioLoginRequest): Call<String>
+    fun login(@Body request: UsuarioLoginRequest): Call<UsuarioLoginResponse>
+
+
+    // ---------------- NUEVOS ENDPOINTS: FORMULARIOS ----------------
+
+    @GET("/formularios")
+    fun getAllFormularios(): Call<List<Formulario>>
+
+    @GET("/formularios/{id}")
+    fun getFormularioById(@Path("id") id: Int): Call<Formulario>
+
+    @POST("/formularios")
+    fun createFormulario(@Body formulario: Formulario): Call<Formulario>
+
+    @PUT("/formularios/{id}")
+    fun updateFormulario(@Path("id") id: Int, @Body formulario: Formulario): Call<Formulario>
+
+    @DELETE("/formularios/{id}")
+    fun deleteFormulario(@Path("id") id: Int): Call<Void>
 }

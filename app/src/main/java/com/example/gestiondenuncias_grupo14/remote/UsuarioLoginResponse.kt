@@ -1,11 +1,12 @@
-// UsuarioLoginResponse.kt
 package com.example.gestiondenuncias_grupo14.remote
 
-/**
- * Response esperado del microservicio de autenticación.
- * Puede incluir un mensaje de éxito o datos del usuario.
- */
 data class UsuarioLoginResponse(
-    val mensaje: String
-    // Si tu backend devuelve más datos (ej. Usuario), puedes agregarlos aquí.
+    val mensaje: String,
+    val rut: String,
+    val nombre: String,
+    val apellido: String,
+    val correo: String,
+    val empresa: String,
+    val cargo: String,
+    val depto: String
 )

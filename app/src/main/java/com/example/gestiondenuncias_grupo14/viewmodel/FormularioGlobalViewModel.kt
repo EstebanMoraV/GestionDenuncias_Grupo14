@@ -1,11 +1,16 @@
 package com.example.gestiondenuncias_grupo14.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.gestiondenuncias_grupo14.model.Denunciado
+import com.example.gestiondenuncias_grupo14.remote.Formulario
+import com.example.gestiondenuncias_grupo14.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-
+import kotlinx.coroutines.launch
+import retrofit2.awaitResponse
 
 class FormularioGlobalViewModel : ViewModel() {
 
@@ -48,6 +53,89 @@ class FormularioGlobalViewModel : ViewModel() {
     // --- LIMPIAR FORMULARIO COMPLETO ---
     fun limpiarFormulario() {
         _estado.value = FormularioGlobalData()
+    }
+
+    // --- CONSTRUIR OBJETO FORMULARIO PARA EL BACKEND ---
+    private fun construirFormulario(): Formulario {
+        val estadoActual = _estado.value
+
+        return Formulario(
+            id = null,
+
+            // DENUNCIADO
+            denunciadoNombre = estadoActual.denunciado.nombre,
+            denunciadoApellidoPaterno = estadoActual.denunciado.apellido_paterno,
+            denunciadoApellidoMaterno = estadoActual.denunciado.apellido_materno,
+            denunciadoRut = estadoActual.denunciado.rut,
+            denunciadoCargo = estadoActual.denunciado.cargo,
+            denunciadoArea = estadoActual.denunciado.dpto_gcia_area,
+
+            // REPRESENTANTE
+            representanteNombre = estadoActual.representante.nombre,
+            representanteApellidoPaterno = estadoActual.representante.apellido_paterno,
+            representanteApellidoMaterno = estadoActual.representante.apellido_materno,
+            representanteRut = estadoActual.representante.rut,
+            representanteCargo = estadoActual.representante.cargo,
+            representanteArea = estadoActual.representante.dpto_gcia_area,
+
+            // VÍCTIMA
+            victimaNombre = estadoActual.victima.nombre,
+            victimaApellidoPaterno = estadoActual.victima.apellido_paterno,
+            victimaApellidoMaterno = estadoActual.victima.apellido_materno,
+            victimaRut = estadoActual.victima.rut,
+            victimaCargo = estadoActual.victima.cargo,
+            victimaArea = estadoActual.victima.dpto_gcia_area,
+
+            // TESTIGO
+            testigoNombre = estadoActual.testigo.nombre,
+            testigoApellidoPaterno = estadoActual.testigo.apellido_paterno,
+            testigoApellidoMaterno = estadoActual.testigo.apellido_materno,
+            testigoRut = estadoActual.testigo.rut,
+            testigoCargo = estadoActual.testigo.cargo,
+            testigoArea = estadoActual.testigo.dpto_gcia_area,
+
+            // TIPO DE DENUNCIA
+            tiposSeleccionados = estadoActual.tipoDenuncia.tiposSeleccionados.joinToString(","),
+            relacionAsimetricaVictimaDepende = estadoActual.tipoDenuncia.relacionAsimetricaVictimaDepende,
+            relacionAsimetricaDenunciadoDepende = estadoActual.tipoDenuncia.relacionAsimetricaDenunciadoDepende,
+            relacionSimetricaMismaArea = estadoActual.tipoDenuncia.relacionSimetricaMismaArea,
+            relacionSimetricaDistintaArea = estadoActual.tipoDenuncia.relacionSimetricaDistintaArea,
+
+            // EVIDENCIAS
+            evidenciaExistente = estadoActual.evidencia.evidenciaExistente,
+            otrosAntecedentes = estadoActual.evidencia.otrosAntecedentes,
+            informadaPreviamente = estadoActual.evidencia.informadaPreviamente,
+            cuentaConTestigos = estadoActual.evidencia.cuentaConTestigos,
+
+            // RELATO
+            relatoTexto = estadoActual.relato.texto,
+            relatoAudioPath = estadoActual.relato.audioPath,
+
+            // METADATOS
+            fechaCreacion = null // lo genera el backend
+        )
+    }
+
+    // --- ENVIAR FORMULARIO AL BACKEND ---
+    fun enviarFormulario(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val formulario = construirFormulario()
+                val response = RetrofitClient.apiService.createFormulario(formulario).awaitResponse()
+
+                if (response.isSuccessful) {
+                    Log.d("Formulario", "Formulario enviado correctamente: ${response.body()}")
+                    onResult(true)
+                } else {
+                    val errorMsg = response.errorBody()?.string()
+                    Log.e("Formulario", "Error al enviar: Código ${response.code()} - $errorMsg")
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                Log.e("Formulario", "Excepción: ${e.localizedMessage}", e)
+                onResult(false)
+            }
+        }
     }
 }
 
@@ -92,6 +180,3 @@ data class RelatoData(
     val texto: String = "",
     val audioPath: String? = null
 )
-
-
-

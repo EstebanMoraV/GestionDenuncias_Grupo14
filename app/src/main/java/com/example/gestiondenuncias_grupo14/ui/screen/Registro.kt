@@ -161,6 +161,7 @@ fun Registro(navController: NavController? = null, viewModel: UsuarioViewModel =
                         Text("Registrar")
                     }
 
+
                     OutlinedButton(
                         onClick = { showCancelDialog = true },
                         modifier = Modifier.weight(1f),

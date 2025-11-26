@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -40,6 +41,7 @@ import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+
 
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,6 +84,7 @@ fun RelatoScreen(
         ), label = "pulso"
     )
 
+
     // Permisos
     var tienePermiso by rememberSaveable { mutableStateOf(false) }
     val solicitarPermiso = rememberLauncherForActivityResult(
@@ -107,7 +110,8 @@ fun RelatoScreen(
     }
 
     Scaffold(
-        topBar = { TopBarApp(title = "Relato de la situación", navController = navController) }
+        topBar = { TopBarApp(title = "Relato de la situación", navController = navController) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 🔹 Conectamos el snackbar
     ) { padding ->
 
         Column(
@@ -295,6 +299,7 @@ fun RelatoScreen(
                         }
                     }
 
+
                     // Barra de progreso
                     if (duracionAudio > 0) {
                         val progreso = (posicionActual.toFloat() / duracionAudio.toFloat()).coerceIn(0f, 1f)
@@ -317,7 +322,7 @@ fun RelatoScreen(
                         )
                     }
 
-                    //  Borrar grabación
+                    // Borrar grabación
                     Spacer(modifier = Modifier.height(20.dp))
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         OutlinedButton(
@@ -338,18 +343,23 @@ fun RelatoScreen(
                 }
             }
 
-            // Finalizar formulario
+            // 🔹 Finalizar formulario corregido
             Button(
                 onClick = {
                     globalViewModel.guardarRelatoAudio(archivoAudio?.absolutePath ?: "")
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = "Formulario completado correctamente",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                    navController.navigate("resumen") {
-                        popUpTo("relato") { inclusive = true }
+                    Log.d("RelatoScreen", "Botón Finalizar presionado")
+
+                    globalViewModel.enviarFormulario { exito ->
+                        coroutineScope.launch {
+                            if (exito) {
+                                snackbarHostState.showSnackbar("Formulario enviado correctamente ✅")
+                                navController.navigate("resumen") {
+                                    popUpTo("relato") { inclusive = true }
+                                }
+                            } else {
+                                snackbarHostState.showSnackbar("Error al enviar el formulario ❌")
+                            }
+                        }
                     }
                 },
                 modifier = Modifier
