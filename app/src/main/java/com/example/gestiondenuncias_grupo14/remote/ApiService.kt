@@ -1,5 +1,6 @@
 package com.example.gestiondenuncias_grupo14.remote
 
+import FormularioHistorialDto
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -38,4 +39,12 @@ interface ApiService {
 
     @DELETE("/formularios/{id}")
     fun deleteFormulario(@Path("id") id: Int): Call<Void>
+
+
+    // -------End Points del historial
+    @GET("/historial")
+    suspend fun getHistorial(): List<FormularioHistorialDto>
+
+    @DELETE("/historial/{id}")
+    suspend fun deleteHistorial(@Path("id") id: Int): retrofit2.Response<Void>
 }
