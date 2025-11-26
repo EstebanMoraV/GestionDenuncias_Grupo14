@@ -20,7 +20,6 @@ fun DenunciadoScreen(
     val scrollState = rememberScrollState()
 
 
-
     FormularioPersonaScreen(
         titulo = "Ingrese los datos del Denunciado",
         navController = navController,

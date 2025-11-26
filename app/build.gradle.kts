@@ -88,13 +88,15 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0")
 
-// Retrofit y Gson Converter
+    // Retrofit y Gson Converter
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-// 👈 ESTA es la que falta
 
-// Corrutinas para trabajo asincrónico
+    // logger de OkHttp
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Corrutinas para trabajo asincrónico
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
 
 

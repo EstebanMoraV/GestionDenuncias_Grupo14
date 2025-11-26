@@ -1,29 +1,28 @@
 package com.example.gestiondenuncias_grupo14.viewmodel
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.gestiondenuncias_grupo14.model.Usuario
-import com.example.gestiondenuncias_grupo14.remote.RetrofitClient
-import com.example.gestiondenuncias_grupo14.remote.UsuarioRequest
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.example.gestiondenuncias_grupo14.model.Usuario
+import com.example.gestiondenuncias_grupo14.remote.RetrofitClient
 import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginRequest
 import com.example.gestiondenuncias_grupo14.remote.UsuarioLoginResponse
+import com.example.gestiondenuncias_grupo14.remote.UsuarioRequest
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 /**
- * ViewModel responsable de la gestión de usuarios.
- * Contiene lógica local (cache en memoria, validaciones) y lógica remota (integración con microservicios vía Retrofit).
+ * ViewModel responsable de la gestión de usuarios con soporte local + remoto.
  */
 class UsuarioViewModel : ViewModel() {
 
     // -------------------------------------------------------------------------
-    // Estado local
+    // ESTADO LOCAL
     // -------------------------------------------------------------------------
 
     /** Lista de usuarios mantenida en memoria como cache temporal. */
@@ -37,7 +36,7 @@ class UsuarioViewModel : ViewModel() {
     var fotoUri: Uri? by mutableStateOf(null)
 
     // -------------------------------------------------------------------------
-    // Datos estáticos para formularios
+    // DATOS PARA FORMULARIOS
     // -------------------------------------------------------------------------
 
     /** Lista de cargos disponibles para selección en formularios. */
@@ -55,7 +54,7 @@ class UsuarioViewModel : ViewModel() {
     )
 
     // -------------------------------------------------------------------------
-    // Funciones locales (sin conexión a servidor)
+    // FUNCIONES LOCALES (SIN SERVIDOR) → usadas por el Preview y pruebas
     // -------------------------------------------------------------------------
 
     /**
@@ -95,6 +94,10 @@ class UsuarioViewModel : ViewModel() {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // VALIDACIONES LOCALES
+    // -------------------------------------------------------------------------
+
     /**
      * Valida los campos de entrada antes de registrar un usuario.
      * @return mensaje de error si algún campo es inválido, o null si todos son correctos.
@@ -123,7 +126,7 @@ class UsuarioViewModel : ViewModel() {
     }
 
     // -------------------------------------------------------------------------
-    // Integración remota con microservicio (Retrofit)
+    // INTEGRACIÓN REMOTA: REGISTRO
     // -------------------------------------------------------------------------
 
     /** LiveData para observar el resultado de la operación remota de creación de usuario. */
@@ -148,6 +151,7 @@ class UsuarioViewModel : ViewModel() {
 
         RetrofitClient.apiService.crearUsuario(request)
             .enqueue(object : Callback<Void> {
+
                 override fun onResponse(call: Call<Void>, response: Response<Void>) {
                     if (response.isSuccessful) {
                         val nuevoUsuario = Usuario(rut, nombre, apellido, correo, contrasena, empresa, cargo, depto)
@@ -165,8 +169,17 @@ class UsuarioViewModel : ViewModel() {
             })
     }
 
+    /**
+     * Limpia el valor de resultado después de que la UI lo haya consumido.
+     * Esto evita que el mensaje se repita al volver a la pantalla.
+     */
+    fun resetResultado() {
+        _resultado.value = null
+    }
 
-    // Dentro de UsuarioViewModel
+    // -------------------------------------------------------------------------
+    // INTEGRACIÓN REMOTA: LOGIN
+    // -------------------------------------------------------------------------
 
     /** LiveData para observar el resultado del login remoto. */
     private val _loginResultado = MutableLiveData<String?>()
@@ -180,22 +193,29 @@ class UsuarioViewModel : ViewModel() {
         val request = UsuarioLoginRequest(correo, contrasena)
 
         RetrofitClient.apiService.login(request)
-            .enqueue(object : Callback<String> {
-                override fun onResponse(call: Call<String>, response: Response<String>) {
+            .enqueue(object : Callback<UsuarioLoginResponse> {
+
+                override fun onResponse(
+                    call: Call<UsuarioLoginResponse>,
+                    response: Response<UsuarioLoginResponse>
+                ) {
                     if (response.isSuccessful) {
-                        // El backend devuelve directamente un String
-                        _loginResultado.postValue(response.body() ?: "Respuesta vacía")
+                        val body = response.body()
+                        // De momento solo usamos el mensaje del backend.
+                        _loginResultado.postValue(body?.mensaje ?: "Login exitoso")
                     } else {
                         _loginResultado.postValue("Error en login: ${response.code()}")
                     }
                 }
 
-                override fun onFailure(call: Call<String>, t: Throwable) {
+                override fun onFailure(
+                    call: Call<UsuarioLoginResponse>,
+                    t: Throwable
+                ) {
                     _loginResultado.postValue("Fallo en la conexión: ${t.message}")
                 }
             })
     }
-
 
     /**
      * Limpia el resultado del login después de que la UI lo consuma.
@@ -203,14 +223,5 @@ class UsuarioViewModel : ViewModel() {
      */
     fun resetLoginResultado() {
         _loginResultado.value = null
-    }
-
-
-    /**
-     * Limpia el valor de resultado después de que la UI lo haya consumido.
-     * Esto evita que el mensaje se repita al volver a la pantalla.
-     */
-    fun resetResultado() {
-        _resultado.value = null
     }
 }

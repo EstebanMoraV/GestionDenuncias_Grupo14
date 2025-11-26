@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestiondenuncias_grupo14.data.local.entity.FormularioEntity
 import com.example.gestiondenuncias_grupo14.data.local.repository.FormularioRepository
 import kotlinx.coroutines.launch
+import com.example.gestiondenuncias_grupo14.remote.FormularioHistorialDto
+
 
 class FormularioDBViewModel(application: Application) : AndroidViewModel(application) {
 
