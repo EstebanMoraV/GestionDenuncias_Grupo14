@@ -12,23 +12,17 @@ import kotlinx.coroutines.launch
 
 class FormularioGlobalViewModel : ViewModel() {
 
-    // -------------------------------------------------------------
-    // ESTADO GLOBAL DEL FORMULARIO
-    // -------------------------------------------------------------
+    // ---------------- ESTADO GLOBAL DEL FORMULARIO ----------------
     private val _estado = MutableStateFlow(FormularioGlobalData())
     val estado: StateFlow<FormularioGlobalData> = _estado
 
-    // -------------------------------------------------------------
-    // VARIABLES ADICIONALES
-    // -------------------------------------------------------------
-    private var evidenciaData: EvidenciaData? = null
-    private var tipoDenunciaData: TipoDenunciaData? = null
-    private var denunciadoModel: Denunciado? = null
-    private var representanteModel: Denunciado? = null
-
-    // Historial remoto (/historial)
+    // ---------------- HISTORIAL DESDE BACKEND ----------------
     private val _historial = MutableStateFlow<List<FormularioHistorialDto>>(emptyList())
     val historial: StateFlow<List<FormularioHistorialDto>> = _historial
+
+    // Copias internas opcionales
+    private var evidenciaData: EvidenciaData? = null
+    private var tipoDenunciaData: TipoDenunciaData? = null
 
     // -------------------------------------------------------------
     // GUARDAR PERSONA (DENUNCIADO / REPRESENTANTE)
@@ -36,7 +30,6 @@ class FormularioGlobalViewModel : ViewModel() {
     fun guardarPersona(tipo: String, persona: Denunciado) {
         when (tipo) {
             "denunciado" -> {
-                denunciadoModel = persona
                 _estado.update {
                     it.copy(
                         denunciadoNombre = persona.nombre,
@@ -50,7 +43,6 @@ class FormularioGlobalViewModel : ViewModel() {
             }
 
             "representante" -> {
-                representanteModel = persona
                 _estado.update {
                     it.copy(
                         representanteNombre = persona.nombre,
@@ -108,16 +100,15 @@ class FormularioGlobalViewModel : ViewModel() {
     }
 
     // -------------------------------------------------------------
-    // HISTORIAL (LEE /historial Y FILTRA POR RUT)
+    // HISTORIAL: CARGAR LISTA DESDE /historial
     // -------------------------------------------------------------
     fun cargarHistorial(
-        rutUsuario: String,
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
                 val lista = RetrofitClient.apiService.getHistorial()
-                _historial.value = lista.filter { it.representanteRut == rutUsuario }
+                _historial.value = lista
             } catch (e: Exception) {
                 onError(e.localizedMessage ?: "Error al cargar historial")
             }
@@ -125,7 +116,31 @@ class FormularioGlobalViewModel : ViewModel() {
     }
 
     // -------------------------------------------------------------
-    // ENVÍO AL BACKEND
+    // HISTORIAL: ELIMINAR UN FORMULARIO
+    // -------------------------------------------------------------
+    fun eliminarDelHistorial(
+        id: Int,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.deleteHistorial(id)
+                if (response.isSuccessful) {
+                    onSuccess()
+                    // recargar lista actualizada
+                    cargarHistorial()
+                } else {
+                    onError("Error ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                onError(e.localizedMessage ?: "Error al eliminar")
+            }
+        }
+    }
+
+    // -------------------------------------------------------------
+    // ENVIAR FORMULARIO AL BACKEND
     // -------------------------------------------------------------
     fun createFormulario(
         onSuccess: () -> Unit = {},
@@ -155,8 +170,7 @@ class FormularioGlobalViewModel : ViewModel() {
     fun limpiarFormulario() {
         evidenciaData = null
         tipoDenunciaData = null
-        denunciadoModel = null
-        representanteModel = null
         _estado.value = FormularioGlobalData()
     }
 }
+

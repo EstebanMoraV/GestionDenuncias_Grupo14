@@ -1,32 +1,45 @@
 package com.example.gestiondenuncias_grupo14.ui.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.gestiondenuncias_grupo14.viewmodel.FormularioDBViewModel
-import com.example.gestiondenuncias_grupo14.data.local.entity.FormularioEntity
+import com.example.gestiondenuncias_grupo14.remote.FormularioHistorialDto
 import com.example.gestiondenuncias_grupo14.ui.complements.TopBarApp
+import com.example.gestiondenuncias_grupo14.viewmodel.FormularioGlobalViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialFormulariosScreen(
     navController: NavController,
-    dbViewModel: FormularioDBViewModel = viewModel()
+    globalViewModel: FormularioGlobalViewModel = viewModel()
 ) {
+    val contexto = LocalContext.current
+    val historial by globalViewModel.historial.collectAsState()
 
-    val formularios by dbViewModel.formularios.collectAsState(initial = emptyList())
+    // Cargar historial al entrar a la pantalla
+    LaunchedEffect(Unit) {
+        globalViewModel.cargarHistorial(
+            onError = { msg ->
+                Toast.makeText(
+                    contexto,
+                    "Error al cargar historial: $msg",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -41,7 +54,7 @@ fun HistorialFormulariosScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (formularios.isEmpty()) {
+            if (historial.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -56,10 +69,10 @@ fun HistorialFormulariosScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(formularios) { formulario ->
-                        FormularioItem(
-                            formulario = formulario,
-                            onDelete = { dbViewModel.eliminar(formulario) }
+                    itemsIndexed(historial) { index, formulario ->
+                        HistorialItem(
+                            indice = index + 1,
+                            formulario = formulario
                         )
                     }
                 }
@@ -69,52 +82,53 @@ fun HistorialFormulariosScreen(
 }
 
 @Composable
-fun FormularioItem(
-    formulario: FormularioEntity,
-    onDelete: () -> Unit
+fun HistorialItem(
+    indice: Int,
+    formulario: FormularioHistorialDto
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            //  Datos del denunciado
+            Text("Denuncia #$indice", fontWeight = FontWeight.Bold)
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // ── Datos del denunciado ──
             Text("Denunciado:", fontWeight = FontWeight.Bold)
-            Text("Nombre: ${formulario.denunciadoNombre}")
-            Text("Apellido Paterno: ${formulario.denunciadoApellidoPaterno}")
-            Text("Apellido Materno: ${formulario.denunciadoApellidoMaterno}")
+            Text("Nombre: ${formulario.denunciadoNombre} ${formulario.denunciadoApellidoPaterno} ${formulario.denunciadoApellidoMaterno}")
             Text("RUT: ${formulario.denunciadoRut}")
             Text("Cargo: ${formulario.denunciadoCargo}")
             Text("Área: ${formulario.denunciadoArea}")
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            //  Datos del representante
+            // ── Datos del representante ──
             Text("Representante:", fontWeight = FontWeight.Bold)
             Text("Nombre: ${formulario.representanteNombre}")
             Text("RUT: ${formulario.representanteRut}")
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            //  Tipo de denuncia resumido
-            Text("Tipo de denuncia:", fontWeight = FontWeight.Bold)
-            Text(formulario.tiposSeleccionados.ifEmpty { "Sin información" })
+            // ── Tipos de denuncia ──
+            Text("Tipos de denuncia:", fontWeight = FontWeight.Bold)
+            val tiposLimpios = formulario.tiposSeleccionados
+                ?.split(",")
+                ?.joinToString(" · ")
+                ?: "Sin información"
+            Text(tiposLimpios)
 
             Spacer(modifier = Modifier.height(8.dp))
 
-
-            //  Botón de eliminar
-            OutlinedButton(
-                onClick = onDelete,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Eliminar")
+            // ── Fecha ──
+            formulario.fechaCreacion?.let { fecha ->
+                val soloFecha = fecha.substringBefore("T")
+                Text("Fecha: $soloFecha", style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -128,4 +142,3 @@ fun HistorialFormulariosPreview() {
         HistorialFormulariosScreen(navController = navController)
     }
 }
-
